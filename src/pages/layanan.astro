@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { getWhatsAppUrl } from '../lib/constants';
+
+const cars = await getCollection('cars');
+---
+
+<BaseLayout title="Layanan Rental Mobil" description="Daftar armada rental mobil terbaik dan termurah di Jogja.">
+  <!-- Hero -->
+  <div class="bg-navy-900 text-white pt-32 pb-20 md:pt-40 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800/50 to-navy-900 z-0"></div>
+    <div class="container mx-auto px-4 text-center relative z-10" data-aos="fade-up">
+      <p class="text-primary-400 font-bold text-sm uppercase tracking-widest mb-3">Armada Kami</p>
+      <h1 class="text-4xl md:text-6xl font-black mb-4">Katalog <span class="text-primary-400">Rental Mobil</span></h1>
+      <p class="text-gray-400 text-lg max-w-xl mx-auto font-light">Pilihan unit selalu bersih, terawat, dan siap antar jemput lokasi kamu.</p>
+    </div>
+  </div>
+
+  <section class="py-20 bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {cars.map((car, index) => (
+          <div data-aos="fade-up" data-aos-delay={index * 80} class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
+            <div class="bg-gray-50 p-6 flex items-center justify-center h-56 overflow-hidden">
+              <img src={car.data.thumbnail} alt={car.data.title} class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-xl font-bold text-gray-900">{car.data.title}</h3>
+                <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-1 rounded-full border border-green-100">Tersedia</span>
+              </div>
+              <p class="text-2xl font-black text-primary-500 mb-1">{car.data.priceLabel}</p>
+              <p class="text-xs text-gray-400 font-medium mb-5">per hari</p>
+              <div class="mb-3">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Fasilitas:</p>
+                <div class="flex flex-wrap gap-2">
+                  {car.data.features.map(f => (
+                    <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-lg">{f}</span>
+                  ))}
+                </div>
+              </div>
+              <a
+                href={getWhatsAppUrl(car.data.whatsappMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-4 block w-full text-center bg-primary-500 text-white py-3 rounded-xl font-bold hover:bg-primary-600 transition-colors"
+              >
+                Booking Sekarang
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<BaseLayout title={post.data.title} description={post.data.excerpt}>
+  <article class="pt-32 pb-16 md:pt-40 bg-white min-h-screen">
+    <div class="container mx-auto px-4 max-w-3xl">
+      <!-- Article Header -->
+      <header class="mb-10 text-center">
+        <time class="text-sm font-medium text-primary-600 mb-4 block">
+          {post.data.publishDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </time>
+        <h1 class="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+          {post.data.title}
+        </h1>
+      </header>
+
+      <!-- Featured Image -->
+      <div class="mb-10 rounded-xl overflow-hidden shadow-md">
+        <img 
+          src={post.data.thumbnail} 
+          alt={post.data.title} 
+          class="w-full h-auto max-h-[500px] object-cover"
+        />
+      </div>
+
+      <!-- Article Content -->
+      <div class="prose prose-lg max-w-none text-gray-700">
+        <Content />
+      </div>
+      
+      <!-- Back Link -->
+      <div class="mt-12 pt-8 border-t border-gray-100">
+        <a href="/blog" class="text-primary-600 font-medium hover:text-primary-700 inline-flex items-center gap-2">
+          &larr; Kembali ke Daftar Artikel
+        </a>
+      </div>
+    </div>
+  </article>
+</BaseLayout>

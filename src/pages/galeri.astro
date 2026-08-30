@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const galleryImages = [
+  { src: "https://images.unsplash.com/photo-1584852922119-94f71a93eeb1?auto=format&fit=crop&q=80&w=800", alt: "Tour Jogja 1" },
+  { src: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&q=80&w=800", alt: "Tour Jogja 2" },
+  { src: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800", alt: "Rental Mobil Jogja" },
+  { src: "https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?auto=format&fit=crop&q=80&w=800", alt: "Wisata Budaya" },
+  { src: "https://images.unsplash.com/photo-1627885437812-32a24bc98a58?auto=format&fit=crop&q=80&w=800", alt: "Pantai Selatan" },
+  { src: "https://images.unsplash.com/photo-1583095111166-3d6074a385f8?auto=format&fit=crop&q=80&w=800", alt: "Candi Prambanan" },
+];
+---
+
+<BaseLayout title="Galeri" description="Galeri foto kegiatan dan armada Beyond Jogja Tours.">
+  <div class="bg-navy-900 text-white pt-32 pb-16 md:pt-40 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800/50 to-navy-900 z-0"></div>
+    <div class="container mx-auto px-4 text-center relative z-10" data-aos="fade-up">
+      <p class="text-primary-400 font-bold text-sm uppercase tracking-widest mb-3">Momen Seru</p>
+      <h1 class="text-4xl md:text-5xl font-black mb-4">Galeri Dokumentasi</h1>
+      <p class="text-gray-400 text-lg max-w-xl mx-auto">Kumpulan momen perjalanan liburan tak terlupakan pelanggan Beyond Jogja Tours.</p>
+    </div>
+  </div>
+
+  <section class="py-20 bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {galleryImages.map((img, i) => (
+          <div data-aos="fade-up" data-aos-delay={i * 80} class="aspect-square overflow-hidden rounded-2xl bg-gray-200 group relative shadow-sm">
+            <img
+              src={img.src}
+              alt={img.alt}
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
+            />
+            <div class="absolute inset-0 bg-navy-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span class="text-white font-bold text-sm px-5 py-2.5 border border-white/50 rounded-full backdrop-blur-sm bg-white/10">
+                Lihat Foto
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
