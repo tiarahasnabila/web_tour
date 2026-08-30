@@ -9,6 +9,12 @@ const funnyMessages = [
   "Jangan bengong, chat aja! 😄",
   "Mobil udah siap, kamu kapan? 🔑",
   "Cuss Borobudur bareng kita! 🏛️",
+  "Healing time! 🌿✨",
+  "Mau sewa Hiace buat rombongan? 🚐",
+  "Pusing mikirin itinerary? Sini dibantu 📝",
+  "Banyak promo menanti lho! 🎉",
+  "Cuaca Jogja lagi enak nih buat jalan ☀️",
+  "Tanya-tanya gratis kok, gass! 💬"
 ];
 ---
 
@@ -55,46 +61,55 @@ const funnyMessages = [
 </style>
 
 <script define:vars={{ funnyMessages }}>
-  const bubble   = document.getElementById('speech-bubble');
-  const bubbleTxt = document.getElementById('bubble-text');
+  // Ensure the script works after Astro View Transitions
+  document.addEventListener('astro:page-load', () => {
+    const bubble    = document.getElementById('speech-bubble');
+    const bubbleTxt = document.getElementById('bubble-text');
+    const waWrapper = document.getElementById('wa-wrapper');
 
-  let msgIndex = 0;
-  let hideTimer = null;
-  let cycleTimer = null;
+    if (!bubble || !bubbleTxt || !waWrapper) return;
 
-  function showBubble(text) {
-    if (bubbleTxt) bubbleTxt.textContent = text;
-    bubble?.classList.remove('opacity-0', 'translate-y-2');
-    bubble?.classList.add('opacity-100', 'translate-y-0');
-  }
+    let msgIndex = 0;
+    let hideTimer = null;
+    let cycleTimer = null;
 
-  function hideBubble() {
-    bubble?.classList.add('opacity-0', 'translate-y-2');
-    bubble?.classList.remove('opacity-100', 'translate-y-0');
-  }
+    function showBubble(text) {
+      if (bubbleTxt) bubbleTxt.textContent = text;
+      bubble?.classList.remove('opacity-0', 'translate-y-2');
+      bubble?.classList.add('opacity-100', 'translate-y-0');
+    }
 
-  function cycleBubble() {
-    msgIndex = (msgIndex + 1) % funnyMessages.length;
-    showBubble(funnyMessages[msgIndex]);
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(hideBubble, 3500);
-  }
+    function hideBubble() {
+      bubble?.classList.add('opacity-0', 'translate-y-2');
+      bubble?.classList.remove('opacity-100', 'translate-y-0');
+    }
 
-  // Show after 2s on load
-  setTimeout(() => {
-    showBubble(funnyMessages[0]);
-    hideTimer = setTimeout(hideBubble, 3500);
-    // Then cycle every 7s
-    cycleTimer = setInterval(cycleBubble, 7000);
-  }, 2000);
+    function cycleBubble() {
+      msgIndex = (msgIndex + 1) % funnyMessages.length;
+      showBubble(funnyMessages[msgIndex]);
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(hideBubble, 3500);
+    }
 
-  // Show on hover
-  const waWrapper = document.getElementById('wa-wrapper');
-  waWrapper?.addEventListener('mouseenter', () => {
-    clearTimeout(hideTimer);
-    showBubble(funnyMessages[msgIndex]);
-  });
-  waWrapper?.addEventListener('mouseleave', () => {
-    hideTimer = setTimeout(hideBubble, 2000);
+    // Clear existing timers on page reload to avoid duplicates
+    if (window.waCycleTimer) clearInterval(window.waCycleTimer);
+    if (window.waHideTimer) clearTimeout(window.waHideTimer);
+
+    // Show after 2s on load
+    setTimeout(() => {
+      showBubble(funnyMessages[0]);
+      window.waHideTimer = setTimeout(hideBubble, 3500);
+      // Then cycle every 7s
+      window.waCycleTimer = setInterval(cycleBubble, 7000);
+    }, 2000);
+
+    // Show on hover
+    waWrapper.addEventListener('mouseenter', () => {
+      clearTimeout(window.waHideTimer);
+      showBubble(funnyMessages[msgIndex]);
+    });
+    waWrapper.addEventListener('mouseleave', () => {
+      window.waHideTimer = setTimeout(hideBubble, 2000);
+    });
   });
 </script>

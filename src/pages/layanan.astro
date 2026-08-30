@@ -21,7 +21,7 @@ const cars = await getCollection('cars');
     <div class="container mx-auto px-4">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {cars.map((car, index) => (
-          <div data-aos="fade-up" data-aos-delay={index * 80} class="bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
+          <div data-aos="fade-up" data-aos-delay={index * 80} class="tilt-card bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
             <div class="bg-gray-50 dark:bg-navy-800/50 p-6 flex items-center justify-center h-56 overflow-hidden transition-colors">
               <img src={car.data.thumbnail} alt={car.data.title} class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </div>

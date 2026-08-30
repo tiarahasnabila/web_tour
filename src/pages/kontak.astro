@@ -175,30 +175,32 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
 </BaseLayout>
 
 <script define:vars={{ phoneNumber: PHONE_NUMBER }}>
-  const form = document.getElementById('contact-form');
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('contact-form');
 
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    const name    = document.getElementById('name').value.trim();
-    const phone   = document.getElementById('phone').value.trim();
-    const service = document.getElementById('service').value;
-    const date    = document.getElementById('date').value;
-    const message = document.getElementById('message').value.trim();
+      const name    = document.getElementById('name').value.trim();
+      const phone   = document.getElementById('phone').value.trim();
+      const service = document.getElementById('service').value;
+      const date    = document.getElementById('date').value;
+      const message = document.getElementById('message').value.trim();
 
-    // Build WhatsApp message
-    let text = `Halo Beyond Jogja Tours! 👋\n\n`;
-    text += `Nama: ${name}\n`;
-    text += `No. HP: ${phone}\n`;
-    text += `Layanan: ${service}\n`;
-    if (date) text += `Tanggal Rencana: ${date}\n`;
-    if (message) text += `\nPesan:\n${message}\n`;
-    text += `\nMohon info lebih lanjut. Terima kasih!`;
+      // Build WhatsApp message
+      let text = `Halo Beyond Jogja Tours! 👋\n\n`;
+      text += `Nama: ${name}\n`;
+      text += `No. HP: ${phone}\n`;
+      text += `Layanan: ${service}\n`;
+      if (date) text += `Tanggal Rencana: ${date}\n`;
+      if (message) text += `\nPesan:\n${message}\n`;
+      text += `\nMohon info lebih lanjut. Terima kasih!`;
 
-    // Clean phone number (remove non-digits, replace leading 0 with 62)
-    const cleanPhone = phoneNumber.replace(/\D/g, '').replace(/^0/, '62');
-    const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
+      // Clean phone number (remove non-digits, replace leading 0 with 62)
+      const cleanPhone = phoneNumber.replace(/\D/g, '').replace(/^0/, '62');
+      const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
 
-    window.open(waUrl, '_blank');
+      window.open(waUrl, '_blank');
+    });
   });
 </script>

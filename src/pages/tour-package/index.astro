@@ -31,7 +31,7 @@ const toursWithContent = await Promise.all(
           <div
             data-aos="fade-up"
             data-aos-delay={index * 80}
-            class="bg-white dark:bg-navy-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 hover:shadow-lg transition-all duration-300 flex flex-col"
+            class="tilt-card bg-white dark:bg-navy-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 hover:shadow-lg transition-all duration-300 flex flex-col"
           >
             <!-- Gambar -->
             <div class="h-52 overflow-hidden relative shrink-0">
@@ -91,30 +91,32 @@ const toursWithContent = await Promise.all(
 
 <script>
   // Accordion toggle for each tour card
-  document.querySelectorAll<HTMLButtonElement>('.detail-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.dataset.target!;
-      const panel    = document.getElementById(targetId);
-      const arrow    = btn.querySelector<SVGElement>('.arrow-icon');
-      const label    = btn.querySelector<HTMLSpanElement>('.btn-label');
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLButtonElement>('.detail-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target!;
+        const panel    = document.getElementById(targetId);
+        const arrow    = btn.querySelector<SVGElement>('.arrow-icon');
+        const label    = btn.querySelector<HTMLSpanElement>('.btn-label');
 
-      if (!panel) return;
+        if (!panel) return;
 
-      const isOpen = !panel.classList.contains('hidden');
+        const isOpen = !panel.classList.contains('hidden');
 
-      if (isOpen) {
-        // Close
-        panel.classList.add('hidden');
-        arrow?.classList.remove('rotate-180');
-        if (label) label.textContent = 'Lihat Detail';
-        btn.classList.remove('bg-primary-50', 'dark:bg-primary-500/10');
-      } else {
-        // Open
-        panel.classList.remove('hidden');
-        arrow?.classList.add('rotate-180');
-        if (label) label.textContent = 'Tutup Detail';
-        btn.classList.add('bg-primary-50', 'dark:bg-primary-500/10');
-      }
+        if (isOpen) {
+          // Close
+          panel.classList.add('hidden');
+          arrow?.classList.remove('rotate-180');
+          if (label) label.textContent = 'Lihat Detail';
+          btn.classList.remove('bg-primary-50', 'dark:bg-primary-500/10');
+        } else {
+          // Open
+          panel.classList.remove('hidden');
+          arrow?.classList.add('rotate-180');
+          if (label) label.textContent = 'Tutup Detail';
+          btn.classList.add('bg-primary-50', 'dark:bg-primary-500/10');
+        }
+      });
     });
   });
 </script>

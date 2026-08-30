@@ -16,4 +16,4 @@ Jangan langsung tergiur dengan harga murah. Bandingkan harga dari beberapa tempa
 ### 3. Periksa Kondisi Kendaraan
 Sebelum serah terima, pastikan Anda memeriksa kondisi kendaraan baik eksterior maupun interior. Jangan ragu untuk mendokumentasikan dengan foto atau video.
 
-Dengan Hati Tour and Transport, Anda tidak perlu khawatir karena kami selalu memastikan kondisi armada prima dan memberikan layanan yang transparan.
+Dengan Beyond Jogja Tours, Anda tidak perlu khawatir karena kami selalu memastikan kondisi armada prima dan memberikan layanan yang transparan.
