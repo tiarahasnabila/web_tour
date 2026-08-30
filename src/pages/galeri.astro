@@ -21,11 +21,11 @@ const galleryImages = [
     </div>
   </div>
 
-  <section class="py-20 bg-gray-50 min-h-screen">
+  <section class="py-20 bg-gray-50 dark:bg-navy-950 transition-colors duration-300 min-h-screen">
     <div class="container mx-auto px-4">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {galleryImages.map((img, i) => (
-          <div data-aos="fade-up" data-aos-delay={i * 80} class="aspect-square overflow-hidden rounded-2xl bg-gray-200 group relative shadow-sm">
+          <div data-aos="fade-up" data-aos-delay={i * 80} class="aspect-square overflow-hidden rounded-2xl bg-gray-200 dark:bg-navy-800 group relative shadow-sm transition-colors">
             <img
               src={img.src}
               alt={img.alt}

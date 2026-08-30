@@ -13,45 +13,45 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
     </div>
   </div>
 
-  <section class="py-20 bg-gray-50">
+  <section class="py-20 bg-gray-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4 max-w-6xl">
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
 
         <!-- Info Kontak -->
         <div class="lg:col-span-2 space-y-6" data-aos="fade-right">
-          <h2 class="text-2xl font-black text-navy-900 mb-2">Informasi Kontak</h2>
-          <p class="text-gray-500 text-sm leading-relaxed mb-8">Atau hubungi kami langsung melalui kontak berikut. Kami siap membantu setiap hari!</p>
+          <h2 class="text-2xl font-black text-navy-900 dark:text-white transition-colors mb-2">Informasi Kontak</h2>
+          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-8 transition-colors">Atau hubungi kami langsung melalui kontak berikut. Kami siap membantu setiap hari!</p>
 
           <div class="space-y-4">
-            <div class="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div class="w-11 h-11 bg-primary-50 rounded-xl flex items-center justify-center text-xl shrink-0">📍</div>
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
+              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">📍</div>
               <div>
-                <h3 class="font-bold text-navy-900 mb-1 text-sm uppercase tracking-wider">Alamat Kantor</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">{OFFICE_ADDRESS}</p>
+                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">Alamat Kantor</h3>
+                <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed transition-colors">{OFFICE_ADDRESS}</p>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div class="w-11 h-11 bg-primary-50 rounded-xl flex items-center justify-center text-xl shrink-0">📞</div>
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
+              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">📞</div>
               <div>
-                <h3 class="font-bold text-navy-900 mb-1 text-sm uppercase tracking-wider">WhatsApp / Telepon</h3>
-                <a href={`https://wa.me/${PHONE_NUMBER.replace(/\D/g,'')}`} target="_blank" class="text-gray-500 text-sm hover:text-primary-500 transition-colors">{PHONE_NUMBER}</a>
+                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">WhatsApp / Telepon</h3>
+                <a href={`https://wa.me/${PHONE_NUMBER.replace(/\D/g,'')}`} target="_blank" class="text-gray-500 dark:text-gray-400 text-sm hover:text-primary-500 dark:hover:text-primary-500 transition-colors">{PHONE_NUMBER}</a>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div class="w-11 h-11 bg-primary-50 rounded-xl flex items-center justify-center text-xl shrink-0">✉️</div>
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
+              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">✉️</div>
               <div>
-                <h3 class="font-bold text-navy-900 mb-1 text-sm uppercase tracking-wider">Email</h3>
-                <a href={`mailto:${EMAIL_ADDRESS}`} class="text-gray-500 text-sm hover:text-primary-500 transition-colors">{EMAIL_ADDRESS}</a>
+                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">Email</h3>
+                <a href={`mailto:${EMAIL_ADDRESS}`} class="text-gray-500 dark:text-gray-400 text-sm hover:text-primary-500 dark:hover:text-primary-500 transition-colors">{EMAIL_ADDRESS}</a>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div class="w-11 h-11 bg-primary-50 rounded-xl flex items-center justify-center text-xl shrink-0">⏰</div>
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
+              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">⏰</div>
               <div>
-                <h3 class="font-bold text-navy-900 mb-1 text-sm uppercase tracking-wider">Jam Operasional</h3>
-                <p class="text-gray-500 text-sm">Setiap Hari: 07:00 – 22:00 WIB</p>
+                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">Jam Operasional</h3>
+                <p class="text-gray-500 dark:text-gray-400 text-sm transition-colors">Setiap Hari: 07:00 – 22:00 WIB</p>
               </div>
             </div>
           </div>
@@ -61,45 +61,45 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
 
         <!-- Form Kontak -->
         <div class="lg:col-span-3" data-aos="fade-left">
-          <div class="bg-white rounded-3xl p-8 md:p-10 shadow-sm border border-gray-100">
-            <h2 class="text-2xl font-black text-navy-900 mb-2">Tinggalkan Pesan</h2>
-            <p class="text-gray-500 text-sm mb-8">Isi form di bawah, pesan kamu akan langsung kami terima via WhatsApp.</p>
+          <div class="bg-white dark:bg-navy-900 rounded-3xl p-8 md:p-10 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
+            <h2 class="text-2xl font-black text-navy-900 dark:text-white mb-2 transition-colors">Tinggalkan Pesan</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mb-8 transition-colors">Isi form di bawah, pesan kamu akan langsung kami terima via WhatsApp.</p>
 
             <form id="contact-form" class="space-y-5">
               <!-- Nama -->
               <div>
-                <label for="name" class="block text-sm font-bold text-navy-900 mb-2">Nama Lengkap <span class="text-primary-500">*</span></label>
+                <label for="name" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Nama Lengkap <span class="text-primary-500">*</span></label>
                 <input
                   type="text"
                   id="name"
                   name="name"
                   required
                   placeholder="Contoh: Budi Santoso"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 placeholder-gray-400"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
 
               <!-- Nomor HP -->
               <div>
-                <label for="phone" class="block text-sm font-bold text-navy-900 mb-2">Nomor HP / WA <span class="text-primary-500">*</span></label>
+                <label for="phone" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Nomor HP / WA <span class="text-primary-500">*</span></label>
                 <input
                   type="tel"
                   id="phone"
                   name="phone"
                   required
                   placeholder="Contoh: 08123456789"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 placeholder-gray-400"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
 
               <!-- Layanan -->
               <div>
-                <label for="service" class="block text-sm font-bold text-navy-900 mb-2">Layanan yang Diminati <span class="text-primary-500">*</span></label>
+                <label for="service" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Layanan yang Diminati <span class="text-primary-500">*</span></label>
                 <select
                   id="service"
                   name="service"
                   required
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 bg-white"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100"
                 >
                   <option value="" disabled selected>-- Pilih Layanan --</option>
                   <option value="Rental Mobil Harian (Lepas Kunci)">Rental Mobil Harian (Lepas Kunci)</option>
@@ -112,24 +112,24 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
 
               <!-- Tanggal -->
               <div>
-                <label for="date" class="block text-sm font-bold text-navy-900 mb-2">Tanggal Rencana</label>
+                <label for="date" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Tanggal Rencana</label>
                 <input
                   type="date"
                   id="date"
                   name="date"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100"
                 />
               </div>
 
               <!-- Pesan -->
               <div>
-                <label for="message" class="block text-sm font-bold text-navy-900 mb-2">Pesan / Pertanyaan</label>
+                <label for="message" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Pesan / Pertanyaan</label>
                 <textarea
                   id="message"
                   name="message"
                   rows="4"
                   placeholder="Ceritain detail kebutuhanmu di sini. Misal: mau ke mana, berapa orang, dll."
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 placeholder-gray-400 resize-none"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 resize-none"
                 ></textarea>
               </div>
 
@@ -157,9 +157,9 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
   </section>
 
   <!-- Peta -->
-  <section class="pb-20 bg-gray-50">
+  <section class="pb-20 bg-gray-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4 max-w-6xl" data-aos="fade-up">
-      <div class="rounded-2xl overflow-hidden shadow-xl h-80 border border-gray-100">
+      <div class="rounded-2xl overflow-hidden shadow-xl h-80 border border-gray-100 dark:border-white/10 transition-colors">
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.923184659795!2d110.36395911477747!3d-7.79410319438318!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a574249a5b481%3A0xc3eeb1168449c256!2sJalan%20Malioboro%2C%20Sosromenduran%2C%20Gedong%20Tengen%2C%20Kota%20Yogyakarta%2C%20Daerah%20Istimewa%20Yogyakarta!5e0!3m2!1sen!2sid!4v1689578135017!5m2!1sen!2sid"
           width="100%"

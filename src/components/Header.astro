@@ -12,7 +12,7 @@ const navLinks = [
 ---
 
 <header class="fixed top-4 left-0 right-0 z-50 w-full px-4 pointer-events-none" id="main-header">
-  <div id="navbar" class="container mx-auto max-w-6xl bg-white/70 backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] rounded-full pointer-events-auto transition-all duration-500">
+  <div id="navbar" class="container mx-auto max-w-6xl bg-white/70 dark:bg-navy-900/80 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.04)] rounded-full pointer-events-auto transition-all duration-500">
     <nav class="px-5 py-2.5">
       <div class="flex justify-between items-center">
 
@@ -22,7 +22,7 @@ const navLinks = [
             B
           </div>
           <div class="leading-tight">
-            <span class="block text-lg font-black text-navy-900 tracking-tight">Beyond Jogja</span>
+            <span class="block text-lg font-black text-navy-900 dark:text-white tracking-tight">Beyond Jogja</span>
             <span class="block text-[9px] font-bold text-primary-500 uppercase tracking-widest -mt-0.5">Tours & Rental</span>
           </div>
         </a>
@@ -32,7 +32,7 @@ const navLinks = [
           <ul class="flex gap-6">
             {navLinks.map(link => (
               <li>
-                <a href={link.href} class="text-gray-500 hover:text-navy-900 font-medium text-[13px] tracking-wide transition-colors duration-200 relative group">
+                <a href={link.href} class="text-gray-500 dark:text-gray-300 hover:text-navy-900 dark:hover:text-white font-medium text-[13px] tracking-wide transition-colors duration-200 relative group">
                   {link.name}
                   <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-500 rounded-full transition-all duration-300 group-hover:w-full"></span>
                 </a>
@@ -49,25 +49,48 @@ const navLinks = [
             Buka 07:00–22:00
           </div>
 
-          <a
-            href={getWhatsAppUrl("Halo, saya ingin bertanya tentang layanan Beyond Jogja Tours")}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="bg-primary-500 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all duration-300"
-          >
-            Booking Sekarang
-          </a>
+          <div class="flex items-center gap-4 border-r border-gray-200 dark:border-white/10 pr-4">
+            <!-- Desktop Theme Toggle -->
+            <button class="theme-toggle p-2 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full focus:outline-none transition-colors" aria-label="Toggle Dark Mode">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-sun hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-moon block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
+            <a
+              href={getWhatsAppUrl("Halo, saya ingin bertanya tentang layanan Beyond Jogja Tours")}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-primary-500 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all duration-300"
+            >
+              Booking Sekarang
+            </a>
+          </div>
         </div>
 
-        <!-- Mobile menu button -->
-        <button id="mobile-menu-btn" class="lg:hidden text-navy-900 p-2 rounded-lg hover:bg-gray-100 focus:outline-none">
-          <svg id="icon-open"  xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          <svg id="icon-close" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div class="flex items-center gap-2 lg:hidden">
+          <!-- Mobile Theme Toggle -->
+          <button class="theme-toggle p-2 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg focus:outline-none transition-colors" aria-label="Toggle Dark Mode">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-sun hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-moon block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+          
+          <!-- Mobile menu button -->
+          <button id="mobile-menu-btn" class="text-navy-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 focus:outline-none">
+            <svg id="icon-open"  xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg id="icon-close" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Mobile Nav -->
@@ -126,14 +149,28 @@ const navLinks = [
     }
   });
 
-  const navbar = document.getElementById('navbar');
+  const handleThemeToggle = () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  };
+
+  document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.addEventListener('click', handleThemeToggle);
+  });
+
   window.addEventListener('scroll', () => {
     if (window.scrollY > 20) {
-      navbar?.classList.remove('bg-white/70', 'shadow-[0_8px_32px_rgba(0,0,0,0.04)]', 'border-white/60');
-      navbar?.classList.add('bg-white/90', 'shadow-[0_8px_32px_rgba(0,0,0,0.08)]', 'border-white/80', 'backdrop-blur-3xl');
+      navbar?.classList.remove('bg-white/70', 'dark:bg-navy-900/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.04)]', 'border-white/60');
+      navbar?.classList.add('bg-white/90', 'dark:bg-navy-900/95', 'shadow-[0_8px_32px_rgba(0,0,0,0.08)]', 'border-white/80', 'backdrop-blur-3xl');
     } else {
-      navbar?.classList.add('bg-white/70', 'shadow-[0_8px_32px_rgba(0,0,0,0.04)]', 'border-white/60');
-      navbar?.classList.remove('bg-white/90', 'shadow-[0_8px_32px_rgba(0,0,0,0.08)]', 'border-white/80', 'backdrop-blur-3xl');
+      navbar?.classList.add('bg-white/70', 'dark:bg-navy-900/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.04)]', 'border-white/60');
+      navbar?.classList.remove('bg-white/90', 'dark:bg-navy-900/95', 'shadow-[0_8px_32px_rgba(0,0,0,0.08)]', 'border-white/80', 'backdrop-blur-3xl');
     }
   });
 </script>

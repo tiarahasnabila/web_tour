@@ -80,11 +80,11 @@ const allTours = await Promise.all(
   </section>
 
   <!-- ===== HOW IT WORKS ===== -->
-  <section class="py-20 bg-gray-50">
+  <section class="py-20 bg-gray-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4">
       <div class="text-center mb-14" data-aos="fade-up">
-        <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-3">Cara Memesan Sangat Mudah</h2>
-        <p class="text-gray-500 max-w-xl mx-auto">Cukup 3 langkah dan kamu siap jalan-jalan!</p>
+        <h2 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-3 transition-colors">Cara Memesan Sangat Mudah</h2>
+        <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto transition-colors">Cukup 3 langkah dan kamu siap jalan-jalan!</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
         <!-- connector line -->
@@ -95,12 +95,12 @@ const allTours = await Promise.all(
           { step: '03', icon: '🎉', title: 'Nikmati Perjalanan', desc: 'Kami siapkan semuanya. Kamu tinggal berangkat!' },
         ].map((item, i) => (
           <div data-aos="fade-up" data-aos-delay={i * 150} class="relative z-10 flex flex-col items-center text-center">
-            <div class="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center text-4xl mb-6 border border-gray-100">
+            <div class="w-20 h-20 rounded-2xl bg-white dark:bg-navy-900 shadow-lg flex items-center justify-center text-4xl mb-6 border border-gray-100 dark:border-white/10 transition-colors">
               {item.icon}
             </div>
-            <span class="text-5xl font-black text-gray-100 absolute top-0 left-1/2 -translate-x-1/2 -z-10 leading-none">{item.step}</span>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
-            <p class="text-gray-500 max-w-xs">{item.desc}</p>
+            <span class="text-5xl font-black text-gray-100 dark:text-navy-800 absolute top-0 left-1/2 -translate-x-1/2 -z-10 leading-none transition-colors">{item.step}</span>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">{item.title}</h3>
+            <p class="text-gray-500 dark:text-gray-400 max-w-xs transition-colors">{item.desc}</p>
           </div>
         ))}
       </div>
@@ -108,14 +108,14 @@ const allTours = await Promise.all(
   </section>
 
   <!-- ===== ARMADA MOBIL ===== -->
-  <section id="cars" class="py-20 bg-white">
+  <section id="cars" class="py-20 bg-white dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4">
       <div class="flex flex-col md:flex-row justify-between items-end mb-12" data-aos="fade-up">
         <div>
           <p class="text-primary-500 font-bold text-sm uppercase tracking-widest mb-2">Armada Terbaik Kami</p>
-          <h2 class="text-3xl md:text-4xl font-black text-gray-900">Pilih Mobil Sesuai Kebutuhanmu</h2>
+          <h2 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white transition-colors">Pilih Mobil Sesuai Kebutuhanmu</h2>
         </div>
-        <a href="/layanan" class="hidden md:flex items-center gap-2 text-gray-600 hover:text-primary-500 font-semibold transition-colors mt-4 md:mt-0">
+        <a href="/layanan" class="hidden md:flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-500 font-semibold transition-colors mt-4 md:mt-0">
           Lihat Semua Armada
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -125,19 +125,19 @@ const allTours = await Promise.all(
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         {featuredCars.map((car, index) => (
-          <div data-aos="fade-up" data-aos-delay={index * 100} class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
-            <div class="bg-gray-50 p-6 flex items-center justify-center h-52 overflow-hidden">
+          <div data-aos="fade-up" data-aos-delay={index * 100} class="bg-white dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 group overflow-hidden">
+            <div class="bg-gray-50 dark:bg-navy-800/50 p-6 flex items-center justify-center h-52 overflow-hidden transition-colors">
               <img src={car.data.thumbnail} alt={car.data.title} class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </div>
             <div class="p-6">
               <div class="flex justify-between items-start mb-3">
-                <h3 class="text-xl font-bold text-gray-900">{car.data.title}</h3>
-                <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-1 rounded-full border border-green-100">Tersedia</span>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white transition-colors">{car.data.title}</h3>
+                <span class="bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold px-2 py-1 rounded-full border border-green-100 dark:border-green-500/20 transition-colors">Tersedia</span>
               </div>
               <p class="text-2xl font-black text-primary-500 mb-4">{car.data.priceLabel} <span class="text-sm font-medium text-gray-400">/ hari</span></p>
               <div class="flex flex-wrap gap-2 mb-6">
                 {car.data.features.map(f => (
-                  <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-lg">{f}</span>
+                  <span class="bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">{f}</span>
                 ))}
               </div>
               <a
@@ -156,29 +156,29 @@ const allTours = await Promise.all(
   </section>
 
   <!-- ===== PAKET WISATA ===== -->
-  <section id="tours" class="py-20 bg-gray-50">
+  <section id="tours" class="py-20 bg-gray-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4">
       <div class="text-center mb-14" data-aos="fade-up">
         <p class="text-primary-500 font-bold text-sm uppercase tracking-widest mb-2">Jalan-jalan Seru</p>
-        <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-3">Paket Wisata Pilihan</h2>
-        <p class="text-gray-500 max-w-xl mx-auto">Dari Candi Borobudur sampai pantai selatan Jogja — pilih paket yang paling sesuai sama selera kamu.</p>
+        <h2 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-3 transition-colors">Paket Wisata Pilihan</h2>
+        <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto transition-colors">Dari Candi Borobudur sampai pantai selatan Jogja — pilih paket yang paling sesuai sama selera kamu.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         {allTours.map(({ tour, Content }, index) => (
-          <div data-aos="fade-up" data-aos-delay={index * 100} class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group flex flex-col">
+          <div data-aos="fade-up" data-aos-delay={index * 100} class="bg-white dark:bg-navy-900 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 hover:shadow-xl transition-all duration-300 group flex flex-col">
             <div class="h-52 overflow-hidden relative shrink-0">
               <img src={tour.data.thumbnail} alt={tour.data.title} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <h3 class="absolute bottom-4 left-5 right-5 text-white text-xl font-black">{tour.data.title}</h3>
             </div>
             <div class="p-6 flex flex-col flex-grow">
-              <p class="text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed">{tour.data.tagline}</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mb-5 line-clamp-2 leading-relaxed transition-colors">{tour.data.tagline}</p>
 
               <!-- Expandable Detail -->
               <div id={`home-detail-${tour.slug}`} class="home-detail-content hidden mb-5">
-                <div class="border-t border-gray-100 pt-4">
-                  <div class="prose prose-sm max-w-none text-gray-600 prose-headings:text-navy-900 prose-headings:font-bold">
+                <div class="border-t border-gray-100 dark:border-white/10 pt-4 transition-colors">
+                  <div class="prose prose-sm max-w-none text-gray-600 dark:text-gray-300 prose-headings:text-navy-900 dark:prose-headings:text-white prose-headings:font-bold transition-colors">
                     <Content />
                   </div>
                 </div>
@@ -188,7 +188,7 @@ const allTours = await Promise.all(
                 <button
                   type="button"
                   data-target={`home-detail-${tour.slug}`}
-                  class="home-detail-btn flex-1 flex items-center justify-center gap-1.5 border border-primary-500 text-primary-600 py-2.5 rounded-lg font-bold text-sm hover:bg-primary-50 transition-colors"
+                  class="home-detail-btn flex-1 flex items-center justify-center gap-1.5 border border-primary-500 text-primary-600 dark:text-primary-400 py-2.5 rounded-lg font-bold text-sm hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 arrow-icon transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -244,31 +244,31 @@ const allTours = await Promise.all(
   </section>
 
   <!-- ===== PETA ===== -->
-  <section class="py-20 bg-white">
+  <section class="py-20 bg-white dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4 max-w-6xl">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center" data-aos="fade-up">
         <div>
           <p class="text-primary-500 font-bold text-sm uppercase tracking-widest mb-3">Lokasi Kami</p>
-          <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-5">Mampir ke Basecamp Kami</h2>
-          <p class="text-gray-500 mb-8 leading-relaxed">Kapan-kapan kalau lagi mampir Jogja, mampir aja dulu ke basecamp kita buat diskusi rencana tripmu sambil ngopi.</p>
+          <h2 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-5 transition-colors">Mampir ke Basecamp Kami</h2>
+          <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed transition-colors">Kapan-kapan kalau lagi mampir Jogja, mampir aja dulu ke basecamp kita buat diskusi rencana tripmu sambil ngopi.</p>
           <div class="space-y-4">
             <div class="flex items-start gap-4">
-              <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0 text-primary-500 text-lg">📍</div>
+              <div class="w-10 h-10 bg-primary-100 dark:bg-primary-500/20 rounded-lg flex items-center justify-center shrink-0 text-primary-500 text-lg transition-colors">📍</div>
               <div>
-                <p class="font-bold text-gray-900">Alamat</p>
-                <p class="text-gray-500 text-sm">Jl. Malioboro No. 1, Yogyakarta</p>
+                <p class="font-bold text-gray-900 dark:text-white transition-colors">Alamat</p>
+                <p class="text-gray-500 dark:text-gray-400 text-sm transition-colors">Jl. Malioboro No. 1, Yogyakarta</p>
               </div>
             </div>
             <div class="flex items-start gap-4">
-              <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center shrink-0 text-primary-500 text-lg">⏰</div>
+              <div class="w-10 h-10 bg-primary-100 dark:bg-primary-500/20 rounded-lg flex items-center justify-center shrink-0 text-primary-500 text-lg transition-colors">⏰</div>
               <div>
-                <p class="font-bold text-gray-900">Jam Operasional</p>
-                <p class="text-gray-500 text-sm">Setiap Hari: 07:00 – 22:00 WIB</p>
+                <p class="font-bold text-gray-900 dark:text-white transition-colors">Jam Operasional</p>
+                <p class="text-gray-500 dark:text-gray-400 text-sm transition-colors">Setiap Hari: 07:00 – 22:00 WIB</p>
               </div>
             </div>
           </div>
         </div>
-        <div class="rounded-2xl overflow-hidden shadow-xl h-80 border border-gray-100">
+        <div class="rounded-2xl overflow-hidden shadow-xl h-80 border border-gray-100 dark:border-white/10 transition-colors">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.923184659795!2d110.36395911477747!3d-7.79410319438318!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a574249a5b481%3A0xc3eeb1168449c256!2sJalan%20Malioboro%2C%20Sosromenduran%2C%20Gedong%20Tengen%2C%20Kota%20Yogyakarta%2C%20Daerah%20Istimewa%20Yogyakarta!5e0!3m2!1sen!2sid!4v1689578135017!5m2!1sen!2sid"
             width="100%"
