@@ -75,10 +75,10 @@ const { title = SITE_TITLE, description = SITE_DESCRIPTION } = Astro.props;
     <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
     <script is:inline>
       const initScripts = () => {
-        // Init AOS
         AOS.init({
           duration: 800,
-          once: true,
+          once: false,
+          mirror: true,
           offset: 50,
         });
 
