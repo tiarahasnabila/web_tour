@@ -4,33 +4,36 @@ export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['DM Sans', 'sans-serif'],
+      },
       colors: {
-        // COLOR 1: Orange — CTA, aksen, highlight
+        // COLOR 1: Teal — CTA, aksen, highlight (minimalist clean)
         primary: {
-          50:  '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#f97316',   // Orange utama
-          600: '#ea6c0a',
-          700: '#c2510a',
-          800: '#9a3d08',
-          900: '#7c3107',
+          50:  '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6',   // Teal utama
+          600: '#0d9488',
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
         },
-        // COLOR 2: Navy — background, text, section gelap
+        // COLOR 2: Slate — background, text, section gelap (neutral minimalist)
         navy: {
-          50:  '#f0f4ff',
-          100: '#e0e9ff',
-          200: '#c4d4fe',
-          300: '#9ab4fd',
-          400: '#6a8afb',
-          500: '#4060f8',
-          600: '#2840ef',
-          700: '#1e30dc',
-          800: '#1a27b3',
-          900: '#0f172a',   // Navy utama (darkest)
-          950: '#080d1a',
+          50:  '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',   // Slate utama (darkest)
+          950: '#020617',
         },
       },
       animation: {

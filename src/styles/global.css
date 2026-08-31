@@ -6,4 +6,40 @@
   body {
     @apply font-sans;
   }
+
+  /* Minimalist: smooth selection color */
+  ::selection {
+    @apply bg-primary-100 text-primary-900;
+  }
+
+  /* Refined heading defaults */
+  h1, h2, h3, h4 {
+    @apply tracking-tight;
+  }
+
+  /* Subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-400;
+  }
+}
+
+@layer utilities {
+  /* Extra tight letter spacing for display headings */
+  .tracking-display {
+    letter-spacing: -0.03em;
+  }
+
+  /* Clean divider style */
+  .divider-clean {
+    @apply border-t border-slate-100 dark:border-white/5;
+  }
 }

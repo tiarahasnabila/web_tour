@@ -4,102 +4,103 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
 ---
 
 <BaseLayout title="Hubungi Kami" description="Kontak dan lokasi Beyond Jogja Tours.">
-  <div class="bg-navy-900 text-white pt-32 pb-16 md:pt-40 relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800/50 to-navy-900 z-0"></div>
+  <div class="bg-navy-950 text-white pt-32 pb-16 md:pt-44 relative overflow-hidden">
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:60px_60px] z-0"></div>
     <div class="container mx-auto px-4 text-center relative z-10" data-aos="fade-up">
-      <p class="text-primary-400 font-bold text-sm uppercase tracking-widest mb-3">Yuk Ngobrol!</p>
-      <h1 class="text-4xl md:text-5xl font-black mb-4">Hubungi Kami</h1>
-      <p class="text-gray-400 text-lg max-w-xl mx-auto">Punya pertanyaan atau mau langsung booking? Tinggal isi form di bawah, kami langsung bales via WhatsApp!</p>
+      <div class="inline-flex items-center gap-2 bg-primary-500/10 border border-primary-500/20 rounded-full px-3 py-1.5 mb-6">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary-400"></span>
+        <span class="text-primary-300 text-xs font-medium tracking-wider">Yuk Ngobrol!</span>
+      </div>
+      <h1 class="text-4xl md:text-[54px] font-bold tracking-display mb-4">Hubungi Kami</h1>
+      <p class="text-slate-400 text-base max-w-xl mx-auto font-light leading-relaxed">Punya pertanyaan atau mau langsung booking? Tinggal isi form di bawah, kami langsung bales via WhatsApp!</p>
     </div>
   </div>
 
-  <section class="py-20 bg-gray-50 dark:bg-navy-950 transition-colors duration-300">
+  <section class="py-24 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4 max-w-6xl">
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
 
         <!-- Info Kontak -->
-        <div class="lg:col-span-2 space-y-6" data-aos="fade-right">
-          <h2 class="text-2xl font-black text-navy-900 dark:text-white transition-colors mb-2">Informasi Kontak</h2>
-          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-8 transition-colors">Atau hubungi kami langsung melalui kontak berikut. Kami siap membantu setiap hari!</p>
+        <div class="lg:col-span-2 space-y-4" data-aos="fade-right">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight transition-colors mb-1">Informasi Kontak</h2>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6 transition-colors">Atau hubungi kami langsung melalui kontak berikut. Kami siap membantu setiap hari!</p>
 
-          <div class="space-y-4">
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
-              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">📍</div>
+          <div class="space-y-3">
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+              <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">📍</div>
               <div>
-                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">Alamat Kantor</h3>
-                <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed transition-colors">{OFFICE_ADDRESS}</p>
+                <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">Alamat Kantor</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed transition-colors">{OFFICE_ADDRESS}</p>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
-              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">📞</div>
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+              <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">📞</div>
               <div>
-                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">WhatsApp / Telepon</h3>
-                <a href={`https://wa.me/${PHONE_NUMBER.replace(/\D/g,'')}`} target="_blank" class="text-gray-500 dark:text-gray-400 text-sm hover:text-primary-500 dark:hover:text-primary-500 transition-colors">{PHONE_NUMBER}</a>
+                <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">WhatsApp / Telepon</h3>
+                <a href={`https://wa.me/${PHONE_NUMBER.replace(/\D/g,'')}`} target="_blank" class="text-slate-500 dark:text-slate-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{PHONE_NUMBER}</a>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
-              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">✉️</div>
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+              <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">✉️</div>
               <div>
-                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">Email</h3>
-                <a href={`mailto:${EMAIL_ADDRESS}`} class="text-gray-500 dark:text-gray-400 text-sm hover:text-primary-500 dark:hover:text-primary-500 transition-colors">{EMAIL_ADDRESS}</a>
+                <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">Email</h3>
+                <a href={`mailto:${EMAIL_ADDRESS}`} class="text-slate-500 dark:text-slate-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{EMAIL_ADDRESS}</a>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
-              <div class="w-11 h-11 bg-primary-50 dark:bg-primary-500/20 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors">⏰</div>
+            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+              <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">⏰</div>
               <div>
-                <h3 class="font-bold text-navy-900 dark:text-white mb-1 text-sm uppercase tracking-wider transition-colors">Jam Operasional</h3>
-                <p class="text-gray-500 dark:text-gray-400 text-sm transition-colors">Setiap Hari: 07:00 – 22:00 WIB</p>
+                <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">Jam Operasional</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-sm transition-colors">Setiap Hari: 07:00 – 22:00 WIB</p>
               </div>
             </div>
           </div>
-
-
         </div>
 
         <!-- Form Kontak -->
         <div class="lg:col-span-3" data-aos="fade-left">
-          <div class="bg-white dark:bg-navy-900 rounded-3xl p-8 md:p-10 shadow-sm border border-gray-100 dark:border-white/10 transition-colors">
-            <h2 class="text-2xl font-black text-navy-900 dark:text-white mb-2 transition-colors">Tinggalkan Pesan</h2>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mb-8 transition-colors">Isi form di bawah, pesan kamu akan langsung kami terima via WhatsApp.</p>
+          <div class="bg-white dark:bg-navy-900 rounded-3xl p-8 md:p-10 border border-slate-100 dark:border-white/8 transition-colors">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1.5 tracking-tight transition-colors">Tinggalkan Pesan</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-8 transition-colors">Isi form di bawah, pesan kamu akan langsung kami terima via WhatsApp.</p>
 
             <form id="contact-form" class="space-y-5">
               <!-- Nama -->
               <div>
-                <label for="name" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Nama Lengkap <span class="text-primary-500">*</span></label>
+                <label for="name" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 uppercase tracking-wider transition-colors">Nama Lengkap <span class="text-primary-500">*</span></label>
                 <input
                   type="text"
                   id="name"
                   name="name"
                   required
                   placeholder="Contoh: Budi Santoso"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm"
                 />
               </div>
 
               <!-- Nomor HP -->
               <div>
-                <label for="phone" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Nomor HP / WA <span class="text-primary-500">*</span></label>
+                <label for="phone" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 uppercase tracking-wider transition-colors">Nomor HP / WA <span class="text-primary-500">*</span></label>
                 <input
                   type="tel"
                   id="phone"
                   name="phone"
                   required
                   placeholder="Contoh: 08123456789"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm"
                 />
               </div>
 
               <!-- Layanan -->
               <div>
-                <label for="service" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Layanan yang Diminati <span class="text-primary-500">*</span></label>
+                <label for="service" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 uppercase tracking-wider transition-colors">Layanan yang Diminati <span class="text-primary-500">*</span></label>
                 <select
                   id="service"
                   name="service"
                   required
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 outline-none transition-all text-slate-800 dark:text-slate-100 text-sm"
                 >
                   <option value="" disabled selected>-- Pilih Layanan --</option>
                   <option value="Rental Mobil Harian (Lepas Kunci)">Rental Mobil Harian (Lepas Kunci)</option>
@@ -112,24 +113,24 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
 
               <!-- Tanggal -->
               <div>
-                <label for="date" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Tanggal Rencana</label>
+                <label for="date" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 uppercase tracking-wider transition-colors">Tanggal Rencana</label>
                 <input
                   type="date"
                   id="date"
                   name="date"
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 outline-none transition-all text-slate-800 dark:text-slate-100 text-sm"
                 />
               </div>
 
               <!-- Pesan -->
               <div>
-                <label for="message" class="block text-sm font-bold text-navy-900 dark:text-white mb-2 transition-colors">Pesan / Pertanyaan</label>
+                <label for="message" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 uppercase tracking-wider transition-colors">Pesan / Pertanyaan</label>
                 <textarea
                   id="message"
                   name="message"
                   rows="4"
                   placeholder="Ceritain detail kebutuhanmu di sini. Misal: mau ke mana, berapa orang, dll."
-                  class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 resize-none"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-navy-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 resize-none text-sm"
                 ></textarea>
               </div>
 
@@ -137,15 +138,15 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
               <button
                 type="submit"
                 id="submit-btn"
-                class="w-full bg-primary-500 hover:bg-primary-600 text-white py-4 rounded-xl font-bold text-lg transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary-500/30 flex items-center justify-center gap-2"
+                class="w-full bg-primary-600 hover:bg-primary-700 text-white py-3.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary-500/20 flex items-center justify-center gap-2"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.086 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                 </svg>
                 Kirim via WhatsApp
               </button>
 
-              <p class="text-center text-xs text-gray-400">
+              <p class="text-center text-xs text-slate-400">
                 Dengan mengklik tombol di atas, kamu akan diarahkan ke WhatsApp untuk mengirim pesan langsung ke kami.
               </p>
             </form>
@@ -157,9 +158,9 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
   </section>
 
   <!-- Peta -->
-  <section class="pb-20 bg-gray-50 dark:bg-navy-950 transition-colors duration-300">
+  <section class="pb-24 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4 max-w-6xl" data-aos="fade-up">
-      <div class="rounded-2xl overflow-hidden shadow-xl h-80 border border-gray-100 dark:border-white/10 transition-colors">
+      <div class="rounded-2xl overflow-hidden h-80 border border-slate-100 dark:border-white/8 transition-colors">
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.923184659795!2d110.36395911477747!3d-7.79410319438318!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a574249a5b481%3A0xc3eeb1168449c256!2sJalan%20Malioboro%2C%20Sosromenduran%2C%20Gedong%20Tengen%2C%20Kota%20Yogyakarta%2C%20Daerah%20Istimewa%20Yogyakarta!5e0!3m2!1sen!2sid!4v1689578135017!5m2!1sen!2sid"
           width="100%"
