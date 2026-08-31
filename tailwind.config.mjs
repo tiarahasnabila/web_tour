@@ -42,6 +42,7 @@ export default {
         'float':       'float 3s ease-in-out infinite',
         'pulse-soft':  'pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'ping-slow':   'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+        'marquee':     'marquee 20s linear infinite',
       },
       keyframes: {
         fadeInUp: {
@@ -59,6 +60,10 @@ export default {
         pulseSoft: {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%':      { opacity: '.8', transform: 'scale(1.05)' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
         },
       },
     },

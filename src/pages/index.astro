@@ -56,15 +56,15 @@ const allTours = await Promise.all(
         <!-- Stats -->
         <div class="flex gap-8 mt-12 pt-8 border-t border-white/8">
           <div>
-            <p class="text-2xl font-bold text-white">500+</p>
+            <p class="text-2xl font-bold text-white"><span class="counter-number" data-target="500">0</span>+</p>
             <p class="text-slate-500 text-xs mt-0.5">Pelanggan Puas</p>
           </div>
           <div>
-            <p class="text-2xl font-bold text-white">10+</p>
+            <p class="text-2xl font-bold text-white"><span class="counter-number" data-target="10">0</span>+</p>
             <p class="text-slate-500 text-xs mt-0.5">Armada Tersedia</p>
           </div>
           <div>
-            <p class="text-2xl font-bold text-white">5★</p>
+            <p class="text-2xl font-bold text-white"><span class="counter-number" data-target="5">0</span>★</p>
             <p class="text-slate-500 text-xs mt-0.5">Rating Google</p>
           </div>
         </div>
@@ -298,6 +298,7 @@ const allTours = await Promise.all(
 
 <script>
   document.addEventListener('astro:page-load', () => {
+    // 1. Tour Detail Toggle
     document.querySelectorAll<HTMLButtonElement>('.home-detail-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const targetId = btn.dataset.target!;
@@ -313,5 +314,36 @@ const allTours = await Promise.all(
         btn.classList.toggle('dark:bg-primary-500/10', !isOpen);
       });
     });
+
+    // 2. Number Counter Animation
+    const counters = document.querySelectorAll('.counter-number');
+    const observerOptions = { threshold: 0.1 };
+    
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const target = +entry.target.getAttribute('data-target')!;
+          const duration = 2000; // 2 seconds
+          const frameRate = 1000 / 60; // 60fps
+          const totalFrames = Math.round(duration / frameRate);
+          const increment = target / totalFrames;
+          
+          let current = 0;
+          const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+              entry.target.textContent = Math.ceil(current).toString();
+              requestAnimationFrame(updateCounter);
+            } else {
+              entry.target.textContent = target.toString();
+            }
+          };
+          updateCounter();
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    counters.forEach(counter => observer.observe(counter));
   });
 </script>
