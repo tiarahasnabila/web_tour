@@ -90,32 +90,42 @@ const toursWithContent = await Promise.all(
 </BaseLayout>
 
 <script>
-  // Accordion toggle for each tour card
+  // Accordion toggle for each tour card: only one card can be open at a time
   document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll<HTMLButtonElement>('.detail-btn').forEach((btn) => {
+    const allButtons = document.querySelectorAll<HTMLButtonElement>('.detail-btn');
+    const allPanels = document.querySelectorAll<HTMLElement>('.detail-content');
+
+    allButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const targetId = btn.dataset.target!;
-        const panel    = document.getElementById(targetId);
-        const arrow    = btn.querySelector<SVGElement>('.arrow-icon');
-        const label    = btn.querySelector<HTMLSpanElement>('.btn-label');
+        const panel = document.getElementById(targetId);
+        const arrow = btn.querySelector<SVGElement>('.arrow-icon');
+        const label = btn.querySelector<HTMLSpanElement>('.btn-label');
 
         if (!panel) return;
 
         const isOpen = !panel.classList.contains('hidden');
 
+        allPanels.forEach((item) => {
+          const itemBtn = document.querySelector<HTMLButtonElement>(`[data-target="${item.id}"]`);
+          const itemArrow = itemBtn?.querySelector<SVGElement>('.arrow-icon');
+          const itemLabel = itemBtn?.querySelector<HTMLSpanElement>('.btn-label');
+
+          item.classList.add('hidden');
+          itemBtn?.classList.remove('bg-primary-50', 'dark:bg-primary-500/10');
+          itemArrow?.classList.remove('rotate-180');
+          if (itemLabel) itemLabel.textContent = 'Lihat Detail';
+        });
+
         if (isOpen) {
-          // Close
-          panel.classList.add('hidden');
-          arrow?.classList.remove('rotate-180');
-          if (label) label.textContent = 'Lihat Detail';
-          btn.classList.remove('bg-primary-50', 'dark:bg-primary-500/10');
-        } else {
-          // Open
-          panel.classList.remove('hidden');
-          arrow?.classList.add('rotate-180');
-          if (label) label.textContent = 'Tutup Detail';
-          btn.classList.add('bg-primary-50', 'dark:bg-primary-500/10');
+          // clicked card was already open -> leave all closed
+          return;
         }
+
+        panel.classList.remove('hidden');
+        arrow?.classList.add('rotate-180');
+        if (label) label.textContent = 'Tutup Detail';
+        btn.classList.add('bg-primary-50', 'dark:bg-primary-500/10');
       });
     });
   });

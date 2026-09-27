@@ -1,9 +1,7 @@
 ---
 title: "All New Avanza"
 slug: "all-new-avanza"
-thumbnail: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800"
-pricePerDay: 450000
-priceLabel: "RP. 450.000,-"
+thumbnail: "/avanza.jpg"
 features: ["Mobil Prima", "BBM", "Driver"]
 whatsappMessage: "Halo, saya ingin Booking All New Avanza"
 ---

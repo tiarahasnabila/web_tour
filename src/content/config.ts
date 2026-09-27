@@ -5,8 +5,6 @@ const carsCollection = defineCollection({
   schema: z.object({
     title: z.string(),
     thumbnail: z.string(),
-    pricePerDay: z.number(),
-    priceLabel: z.string(),
     features: z.array(z.string()),
     whatsappMessage: z.string(),
   }),
