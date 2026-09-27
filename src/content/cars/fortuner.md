@@ -1,7 +1,7 @@
 ---
 title: "Fortuner"
 slug: "Fortuner"
-thumbnail: "/fortuner.jpg"
+thumbnail: "/fortuner2.jpg"
 features: ["Mobil Prima", "BBM", "Driver"]
 whatsappMessage: "Halo, saya ingin Booking Fortuner"
 ---

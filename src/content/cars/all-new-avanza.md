@@ -1,7 +1,7 @@
 ---
 title: "All New Avanza"
 slug: "all-new-avanza"
-thumbnail: "/avanza.jpg"
+thumbnail: "/avanza2.png"
 features: ["Mobil Prima", "BBM", "Driver"]
 whatsappMessage: "Halo, saya ingin Booking All New Avanza"
 ---

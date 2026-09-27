@@ -1,7 +1,7 @@
 ---
 title: "Hiace"
 slug: "Hiace"
-thumbnail: "/hiace.jpg"
+thumbnail: "/hiace2.jpg"
 features: ["Mobil Prima", "BBM", "Driver"]
 whatsappMessage: "Halo, saya ingin Booking Hiace"
 ---

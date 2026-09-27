@@ -71,16 +71,21 @@ const allTours = await Promise.all(
       </div>
 
       <!-- Right: Car image -->
-      <div class="relative flex items-end justify-center" data-aos="fade-left" data-aos-delay="200">
-        <img
-          src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=900"
-          alt="Armada Beyond Jogja Tours"
-          class="w-full max-w-xl object-contain drop-shadow-2xl"
-        />
+      <div class="relative flex items-center justify-center lg:justify-end" data-aos="fade-left" data-aos-delay="200">
+        <div class="relative w-full max-w-[760px] h-[300px] md:h-[360px] lg:h-[420px]">
+          <div class="absolute inset-x-2 md:inset-x-6 bottom-0 h-[72%] rounded-[38%_62%_40%_60%/62%_38%_62%_38%] bg-[linear-gradient(135deg,#a9deff_0%,#89d4ff_35%,#69c7f7_100%)] shadow-[0_30px_80px_rgba(34,211,238,0.15)]"></div>
+          <div class="absolute inset-x-4 md:inset-x-10 bottom-4 h-[62%] rounded-[36%_64%_35%_65%/60%_40%_60%_40%] bg-white/10 blur-sm"></div>
+          <img
+            src="/rentalmobil.jpg"
+            alt="Armada Beyond Jogja Tours"
+            class="absolute inset-x-0 bottom-0 mx-auto w-[94%] max-w-[700px] object-contain drop-shadow-[0_30px_45px_rgba(15,23,42,0.25)]"
+          />
+        </div>
+
         <!-- floating badge -->
-        <div class="absolute top-8 right-4 bg-white rounded-2xl p-4 shadow-2xl" data-aos="zoom-in" data-aos-delay="500">
+        <div class="absolute top-6 right-2 md:right-6 bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-[0_20px_50px_rgba(15,23,42,0.12)] border border-slate-100" data-aos="zoom-in" data-aos-delay="500">
           <p class="text-xs text-slate-400 font-medium">Mulai dari</p>
-          <p class="text-xl font-bold text-primary-600">Rp 350K</p>
+          <p class="text-xl md:text-2xl font-bold text-primary-600 leading-tight">Rp 350K</p>
           <p class="text-xs text-slate-400">/ hari</p>
         </div>
       </div>
