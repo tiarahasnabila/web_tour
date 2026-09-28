@@ -6,7 +6,9 @@ import { getWhatsAppUrl, OFFICE_ADDRESS } from '../lib/constants';
 const cars = await getCollection('cars');
 const tours = await getCollection('tours');
 
-const featuredCars = cars.slice(0, 3);
+const featuredCars = ['all-new-avanza', 'innova-reborn', 'hiace', 'fortuner']
+  .map((slug) => cars.find((car) => car.slug.toLowerCase() === slug))
+  .filter((car) => car !== undefined);
 
 // Render markdown content for each featured tour
 const allTours = await Promise.all(
@@ -129,15 +131,9 @@ const allTours = await Promise.all(
           <p class="text-primary-600 dark:text-primary-400 font-medium text-xs uppercase tracking-[0.15em] mb-2">Armada Terbaik Kami</p>
           <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-display transition-colors">Pilih Mobil Sesuai Kebutuhanmu</h2>
         </div>
-        <a href="/layanan" class="hidden md:flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm transition-colors mt-4 md:mt-0">
-          Lihat Semua Armada
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </a>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {featuredCars.map((car, index) => (
           <div data-aos="fade-up" data-aos-delay={index * 100} class="tilt-card bg-white dark:bg-navy-900 rounded-2xl border border-slate-100 dark:border-white/8 hover:border-primary-200 dark:hover:border-primary-500/20 shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden">
             <div class="bg-slate-50 dark:bg-navy-800/50 p-6 flex items-center justify-center h-52 overflow-hidden transition-colors">
@@ -148,7 +144,6 @@ const allTours = await Promise.all(
                 <h3 class="text-base font-semibold text-slate-900 dark:text-white transition-colors">{car.data.title}</h3>
                 <span class="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-500/20 transition-colors">Tersedia</span>
               </div>
-              <p class="text-xl font-bold text-primary-600 dark:text-primary-400 mb-1">{car.data.priceLabel} <span class="text-xs font-normal text-slate-400">/ hari</span></p>
               <div class="flex flex-wrap gap-1.5 mb-6 mt-4">
                 {car.data.features.map(f => (
                   <span class="bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-300 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors">{f}</span>
@@ -165,6 +160,20 @@ const allTours = await Promise.all(
             </div>
           </div>
         ))}
+      </div>
+
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200 dark:border-white/10 pt-6">
+        <p class="max-w-3xl text-sm text-slate-600 dark:text-slate-300 leading-relaxed text-center sm:text-left">
+          Ingin menggunakan kendaraan lain yang mungkin lebih nyaman? Kamu bisa request atau tanyakan terlebih dahulu melalui chat sebelum melakukan booking.
+        </p>
+        <a
+          href={getWhatsAppUrl("Halo, saya ingin menanyakan kendaraan lain sebelum booking")}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="shrink-0 inline-flex items-center justify-center bg-primary-600 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+        >
+          Tanya via WhatsApp
+        </a>
       </div>
     </div>
   </section>

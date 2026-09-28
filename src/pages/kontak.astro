@@ -4,55 +4,55 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
 ---
 
 <BaseLayout title="Hubungi Kami" description="Kontak dan lokasi Beyond Jogja Tours.">
-  <div class="bg-navy-950 text-white pt-32 pb-16 md:pt-44 relative overflow-hidden">
+  <div class="bg-navy-950 text-white pt-28 pb-10 md:pt-44 md:pb-16 relative overflow-hidden">
     <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:60px_60px] z-0"></div>
     <div class="container mx-auto px-4 text-center relative z-10" data-aos="fade-up">
       <div class="inline-flex items-center gap-2 bg-primary-500/10 border border-primary-500/20 rounded-full px-3 py-1.5 mb-6">
         <span class="w-1.5 h-1.5 rounded-full bg-primary-400"></span>
         <span class="text-primary-300 text-xs font-medium tracking-wider">Yuk Ngobrol!</span>
       </div>
-      <h1 class="text-4xl md:text-[54px] font-bold tracking-display mb-4">Hubungi Kami</h1>
-      <p class="text-slate-400 text-base max-w-xl mx-auto font-light leading-relaxed">Punya pertanyaan atau mau langsung booking? Tinggal isi form di bawah, kami langsung bales via WhatsApp!</p>
+      <h1 class="text-3xl sm:text-4xl md:text-[54px] font-bold tracking-display mb-3 md:mb-4">Hubungi Kami</h1>
+      <p class="text-slate-400 text-sm md:text-base max-w-xl mx-auto font-light leading-relaxed">Punya pertanyaan atau mau langsung booking? Tinggal isi form di bawah, kami langsung bales via WhatsApp!</p>
     </div>
   </div>
 
-  <section class="py-24 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
+  <section class="py-12 md:py-24 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4 max-w-6xl">
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
 
         <!-- Info Kontak -->
         <div class="lg:col-span-2 space-y-4" data-aos="fade-right">
           <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight transition-colors mb-1">Informasi Kontak</h2>
-          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6 transition-colors">Atau hubungi kami langsung melalui kontak berikut. Kami siap membantu setiap hari!</p>
+          <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 md:mb-6 transition-colors">Atau hubungi kami langsung melalui kontak berikut. Kami siap membantu setiap hari!</p>
 
           <div class="space-y-3">
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+            <div class="flex items-start gap-3 md:gap-4 bg-white dark:bg-navy-900 rounded-2xl p-4 md:p-5 border border-slate-100 dark:border-white/8 transition-colors">
               <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">📍</div>
-              <div>
+              <div class="min-w-0">
                 <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">Alamat Kantor</h3>
-                <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed transition-colors">{OFFICE_ADDRESS}</p>
+                <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed break-words transition-colors">{OFFICE_ADDRESS}</p>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+            <div class="flex items-start gap-3 md:gap-4 bg-white dark:bg-navy-900 rounded-2xl p-4 md:p-5 border border-slate-100 dark:border-white/8 transition-colors">
               <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">📞</div>
-              <div>
+              <div class="min-w-0">
                 <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">WhatsApp / Telepon</h3>
                 <a href={`https://wa.me/${PHONE_NUMBER.replace(/\D/g,'')}`} target="_blank" class="text-slate-500 dark:text-slate-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{PHONE_NUMBER}</a>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+            <div class="flex items-start gap-3 md:gap-4 bg-white dark:bg-navy-900 rounded-2xl p-4 md:p-5 border border-slate-100 dark:border-white/8 transition-colors">
               <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">✉️</div>
-              <div>
+              <div class="min-w-0">
                 <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">Email</h3>
-                <a href={`mailto:${EMAIL_ADDRESS}`} class="text-slate-500 dark:text-slate-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{EMAIL_ADDRESS}</a>
+                <a href={`mailto:${EMAIL_ADDRESS}`} class="text-slate-500 dark:text-slate-400 text-sm break-all hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{EMAIL_ADDRESS}</a>
               </div>
             </div>
 
-            <div class="flex items-start gap-4 bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-100 dark:border-white/8 transition-colors">
+            <div class="flex items-start gap-3 md:gap-4 bg-white dark:bg-navy-900 rounded-2xl p-4 md:p-5 border border-slate-100 dark:border-white/8 transition-colors">
               <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/15 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors">⏰</div>
-              <div>
+              <div class="min-w-0">
                 <h3 class="font-semibold text-slate-900 dark:text-white mb-1 text-xs uppercase tracking-wider transition-colors">Jam Operasional</h3>
                 <p class="text-slate-500 dark:text-slate-400 text-sm transition-colors">Setiap Hari: 07:00 – 22:00 WIB</p>
               </div>
@@ -62,9 +62,9 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
 
         <!-- Form Kontak -->
         <div class="lg:col-span-3" data-aos="fade-left">
-          <div class="bg-white dark:bg-navy-900 rounded-3xl p-8 md:p-10 border border-slate-100 dark:border-white/8 transition-colors">
+          <div class="bg-white dark:bg-navy-900 rounded-3xl p-5 md:p-10 border border-slate-100 dark:border-white/8 transition-colors">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1.5 tracking-tight transition-colors">Tinggalkan Pesan</h2>
-            <p class="text-slate-500 dark:text-slate-400 text-sm mb-8 transition-colors">Isi form di bawah, pesan kamu akan langsung kami terima via WhatsApp.</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-6 md:mb-8 transition-colors">Isi form di bawah, pesan kamu akan langsung kami terima via WhatsApp.</p>
 
             <form id="contact-form" class="space-y-5">
               <!-- Nama -->
@@ -158,9 +158,9 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
   </section>
 
   <!-- Peta -->
-  <section class="pb-24 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
+  <section class="pb-12 md:pb-24 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4 max-w-6xl" data-aos="fade-up">
-      <div class="rounded-[28px] overflow-hidden border border-slate-200/80 dark:border-white/8 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-colors h-[260px] md:h-[340px] lg:h-[420px]">
+      <div class="rounded-2xl md:rounded-[28px] overflow-hidden border border-slate-200/80 dark:border-white/8 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-colors h-[220px] sm:h-[260px] md:h-[340px] lg:h-[420px]">
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.522876455459!2d110.40907557476658!3d-7.840212692181067!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a56da295ed6f5%3A0x5b308149005a2390!2sSAMARA%20REGENCY!5e0!3m2!1sen!2sid!4v1790485562673!5m2!1sen!2sid"
           class="w-full h-full border-0"
