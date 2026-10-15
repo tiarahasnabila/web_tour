@@ -60,6 +60,25 @@ const toursWithContent = await Promise.all(
                 </div>
               </div>
 
+              {(tour.slug.toLowerCase().includes('borobudur') || tour.slug.toLowerCase().includes('prambanan')) && (
+                <div class="mb-4 pt-3 border-t border-gray-100 dark:border-white/10">
+                  <p class="text-[10px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-2">Pesan via GetYourGuide:</p>
+                  <a
+                    href="https://www.getyourguide.com/yogyakarta-l349/borobudur-sunrise-prambanan-sunset-its-hidden-temples-t1505636/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="transition-transform duration-200 hover:scale-[1.02] inline-block shadow-sm rounded-lg overflow-hidden"
+                  >
+                    <div style="position: relative; width: fit-content">
+                      <img src="https://gyg.me/pQw3KK9K" width="160px" height="auto" style="border: 1px solid #c6c8d0" class="rounded-lg" alt="GetYourGuide | Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples"/>
+                      <p style="position: absolute; font-size: 0.5rem; font-weight: 500; color: #000000; font-family: Arial, sans-serif; z-index: 10; margin: 0 auto; right: 0.2rem; top: 0.2rem; width: 60%; line-height: 1.1;">
+                        Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples
+                      </p>
+                    </div>
+                  </a>
+                </div>
+              )}
+
               <!-- Tombol Aksi -->
               <div class="flex gap-3 mt-auto">
                 <button

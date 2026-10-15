@@ -39,16 +39,33 @@ const { Content } = await tour.render();
           <Content />
         </div>
         
-        <div class="mt-12 pt-8 border-t border-gray-100 text-center">
+        <div class="mt-12 pt-8 border-t border-gray-100 text-center flex flex-col items-center">
           <h3 class="text-2xl font-bold text-gray-900 mb-6">Tertarik dengan Paket Tour Ini?</h3>
-          <a 
-            href={getWhatsAppUrl(tour.data.whatsappMessage)}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-block bg-primary-600 text-white px-10 py-4 rounded-lg font-bold text-lg hover:bg-primary-700 transition-colors shadow-md"
-          >
-            Contact Us Now via WhatsApp
-          </a>
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a 
+              href={getWhatsAppUrl(tour.data.whatsappMessage)}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-block bg-primary-600 text-white px-8 py-3.5 rounded-lg font-bold text-base hover:bg-primary-700 transition-colors shadow-md"
+            >
+              Contact Us Now via WhatsApp
+            </a>
+            {(tour.slug.toLowerCase().includes('borobudur') || tour.slug.toLowerCase().includes('prambanan')) && (
+              <a
+                href="https://www.getyourguide.com/yogyakarta-l349/borobudur-sunrise-prambanan-sunset-its-hidden-temples-t1505636/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="transition-transform duration-200 hover:scale-[1.03] inline-block shadow-sm rounded-lg overflow-hidden"
+              >
+                <div style="position: relative; width: fit-content">
+                  <img src="https://gyg.me/pQw3KK9K" width="170px" height="auto" style="border: 1px solid #c6c8d0" class="rounded-lg" alt="GetYourGuide | Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples"/>
+                  <p style="position: absolute; font-size: 0.52rem; font-weight: 500; color: #000000; font-family: Arial, sans-serif; z-index: 10; margin: 0 auto; right: 0.2rem; top: 0.2rem; width: 60%; line-height: 1.1;">
+                    Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples
+                  </p>
+                </div>
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </div>
