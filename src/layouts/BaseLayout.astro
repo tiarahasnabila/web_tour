@@ -36,8 +36,9 @@ if (image) {
   ogImage = image.startsWith('http') ? image : `${siteUrl}${image.startsWith('/') ? '' : '/'}${image}`;
 }
 
-// Pastikan halaman publik selalu merespons dengan konten fresh tanpa cache browser usang
-Astro.response.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+// Optimasi Kecepatan Vercel Edge CDN:
+// Browser revalidate (max-age=0), Vercel Edge CDN menyajikan HTML instan ~20ms (s-maxage=600, SWR)
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400');
 ---
 
 <!doctype html>

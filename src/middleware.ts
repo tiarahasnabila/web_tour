@@ -16,6 +16,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.user = user;
   }
 
-  return next();
+  const response = await next();
+
+  // Optimasi Kecepatan Vercel CDN Edge Cache untuk Halaman Publik:
+  // Menyajikan respon HTML langsung dari Edge Network terdekat (~20-50ms)
+  if (
+    context.request.method === 'GET' &&
+    !pathname.startsWith('/admin') &&
+    !pathname.startsWith('/api') &&
+    response.status === 200
+  ) {
+    response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400');
+  }
+
+  return response;
 });
 
