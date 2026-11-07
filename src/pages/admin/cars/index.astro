@@ -1,0 +1,301 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { sql } from '../../../lib/db';
+import { verifySessionToken } from '../../../lib/auth';
+
+// Wajib login
+const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+let cars: any[] = [];
+let flash: { type: 'success' | 'error'; text: string } | null = null;
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const action = formData.get('_action');
+    const carId = formData.get('car_id');
+
+    if (action === 'delete' && carId) {
+      await sql`DELETE FROM cars WHERE id = ${Number(carId)};`;
+      flash = { type: 'success', text: 'Unit mobil berhasil dihapus.' };
+    }
+  } catch (err: any) {
+    console.error('Delete error:', err);
+    flash = { type: 'error', text: 'Gagal menghapus: ' + err.message };
+  }
+}
+
+const saved = Astro.url.searchParams.get('saved');
+if (!flash && saved) {
+  flash = { type: 'success', text: 'Data mobil berhasil disimpan.' };
+}
+
+try {
+  cars = await sql`SELECT * FROM cars ORDER BY id DESC;`;
+} catch (err: any) {
+  console.error('Fetch error:', err);
+  flash = { type: 'error', text: 'Gagal memuat data dari database.' };
+}
+---
+
+<AdminLayout title="Armada Mobil" active="cars">
+  <div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Armada Rental Mobil</h1>
+        <p class="text-sm text-slate-500 mt-1">Kelola unit mobil rental yang tampil di katalog layanan.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Switcher View: List & Icon -->
+        <div class="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+          <button
+            type="button"
+            id="view-btn-list"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            title="Tampilan List"
+            aria-label="Tampilan List"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span class="hidden sm:inline">List</span>
+          </button>
+          <button
+            type="button"
+            id="view-btn-grid"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            title="Tampilan Icon / Grid"
+            aria-label="Tampilan Icon / Grid"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span class="hidden sm:inline">Icon</span>
+          </button>
+        </div>
+
+        <a href="/admin/cars/tambah" class="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+          <span>Tambah Mobil</span>
+        </a>
+      </div>
+    </div>
+
+    {flash && (
+      <div class:list={[
+        'px-4 py-3 rounded-xl text-sm font-medium border',
+        flash.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700',
+      ]}>
+        {flash.text}
+      </div>
+    )}
+
+    {cars.length === 0 ? (
+      <div class="bg-white rounded-2xl border border-dashed border-slate-300 py-16 text-center">
+        <p class="text-slate-500 text-sm">Belum ada unit mobil.</p>
+        <a href="/admin/cars/tambah" class="inline-block mt-3 text-primary-600 font-semibold text-sm hover:underline">+ Tambah mobil pertama</a>
+      </div>
+    ) : (
+      <>
+        <!-- 1. TAMPILAN LIST -->
+        <div id="view-container-list" class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+          <ul class="divide-y divide-slate-100">
+            {cars.map((car) => {
+              let features: string[] = [];
+              try {
+                features = typeof car.features === 'string' ? JSON.parse(car.features) : (car.features || []);
+              } catch {
+                features = [];
+              }
+              return (
+                <li class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-slate-50/60 transition">
+                  <img
+                    src={car.thumbnail}
+                    alt={car.title}
+                    class="w-full sm:w-28 h-32 sm:h-20 rounded-xl object-cover bg-slate-100 border border-slate-200 shrink-0"
+                    loading="lazy"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <h3 class="font-semibold text-slate-900 truncate">{car.title}</h3>
+                      {car.badge && (
+                        <span class="text-[10px] bg-primary-100 text-primary-700 font-bold px-2 py-0.5 rounded-full">
+                          {car.badge}
+                        </span>
+                      )}
+                    </div>
+                    <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                      <span class="font-semibold text-slate-800">{car.price || 'Rp 400.000'} {car.price_unit || '/ hari'}</span>
+                      <span>•</span>
+                      <span>{car.capacity || '6-7 Orang'}</span>
+                      <span>•</span>
+                      <span>{car.transmission || 'Manual/Matic'}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 mt-1.5">
+                      {features.map((f: string) => (
+                        <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">{f}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <a href={`/admin/cars/edit/${car.id}`} class="px-3 py-2 rounded-lg text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 transition">Edit</a>
+                    <form method="POST" onsubmit="return confirmDelete(this, 'Hapus Unit Mobil?', 'Unit armada mobil ini akan dihapus secara permanen dari daftar rental.');">
+                      <input type="hidden" name="_action" value="delete" />
+                      <input type="hidden" name="car_id" value={car.id} />
+                      <button type="submit" class="px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition cursor-pointer">Hapus</button>
+                    </form>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <!-- 2. TAMPILAN ICON / GRID -->
+        <div id="view-container-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {cars.map((car) => {
+            let features: string[] = [];
+            try {
+              features = typeof car.features === 'string' ? JSON.parse(car.features) : (car.features || []);
+            } catch {
+              features = [];
+            }
+            return (
+              <div class="group bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
+                <div>
+                  <!-- Thumbnail Mobil dengan Badge & Harga -->
+                  <div class="relative aspect-video w-full overflow-hidden bg-slate-100 flex items-center justify-center p-3">
+                    <img
+                      src={car.thumbnail}
+                      alt={car.title}
+                      loading="lazy"
+                      class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                    />
+                    {car.badge && (
+                      <span class="absolute top-3 left-3 text-[10px] bg-sky-600 text-white font-bold px-2.5 py-1 rounded-full shadow-md">
+                        {car.badge}
+                      </span>
+                    )}
+                    <div class="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-xl bg-slate-900/80 backdrop-blur text-white text-xs font-bold shadow-md">
+                      {car.price || 'Rp 400.000'} <span class="text-[10px] font-normal text-slate-300">{car.price_unit || '/ hari'}</span>
+                    </div>
+                  </div>
+
+                  <!-- Konten Kartu -->
+                  <div class="p-5 space-y-2.5">
+                    <h3 class="font-bold text-slate-900 text-base line-clamp-1 group-hover:text-sky-600 transition-colors" title={car.title}>
+                      {car.title}
+                    </h3>
+
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-lg text-[11px] font-medium">
+                        👥 {car.capacity || '6-7 Orang'}
+                      </span>
+                      <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-lg text-[11px] font-medium">
+                        ⚙️ {car.transmission || 'Manual/Matic'}
+                      </span>
+                    </div>
+
+                    <!-- Fitur-fitur fasilitas -->
+                    <div class="pt-2.5 flex flex-wrap gap-1 border-t border-slate-100">
+                      {features.slice(0, 3).map((f: string) => (
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
+                          {f}
+                        </span>
+                      ))}
+                      {features.length > 3 && (
+                        <span class="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-md">
+                          +{features.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tombol Aksi Bawah -->
+                <div class="p-5 pt-0 flex items-center gap-2">
+                  <a
+                    href={`/admin/cars/edit/${car.id}`}
+                    class="flex-1 py-2.5 text-center rounded-xl text-xs font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 transition"
+                  >
+                    Edit Armada
+                  </a>
+                  <form
+                    method="POST"
+                    onsubmit="return confirmDelete(this, 'Hapus Unit Mobil?', 'Unit armada mobil ini akan dihapus secara permanen dari daftar rental.');"
+                    class="shrink-0"
+                  >
+                    <input type="hidden" name="_action" value="delete" />
+                    <input type="hidden" name="car_id" value={car.id} />
+                    <button
+                      type="submit"
+                      class="p-2.5 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 transition cursor-pointer"
+                      title="Hapus armada"
+                      aria-label="Hapus"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </>
+    )}
+  </div>
+
+  <!-- Script Switcher View List & Icon -->
+  <script is:inline>
+    (function () {
+      const storageKey = 'admin-cars-view';
+      const btnList = document.getElementById('view-btn-list');
+      const btnGrid = document.getElementById('view-btn-grid');
+      const containerList = document.getElementById('view-container-list');
+      const containerGrid = document.getElementById('view-container-grid');
+
+      const activeClasses = ['bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs'];
+      const inactiveClasses = ['text-slate-500', 'hover:text-slate-700', 'dark:hover:text-slate-200'];
+
+      function setView(view) {
+        if (view === 'grid') {
+          containerList?.classList.add('hidden');
+          containerGrid?.classList.remove('hidden');
+
+          btnGrid?.classList.add(...activeClasses);
+          btnGrid?.classList.remove(...inactiveClasses);
+
+          btnList?.classList.remove(...activeClasses);
+          btnList?.classList.add(...inactiveClasses);
+
+          localStorage.setItem(storageKey, 'grid');
+        } else {
+          containerGrid?.classList.add('hidden');
+          containerList?.classList.remove('hidden');
+
+          btnList?.classList.add(...activeClasses);
+          btnList?.classList.remove(...inactiveClasses);
+
+          btnGrid?.classList.remove(...activeClasses);
+          btnGrid?.classList.add(...inactiveClasses);
+
+          localStorage.setItem(storageKey, 'list');
+        }
+      }
+
+      // Restore saved view or default to list
+      const savedView = localStorage.getItem(storageKey) || 'list';
+      setView(savedView);
+
+      btnList?.addEventListener('click', () => setView('list'));
+      btnGrid?.addEventListener('click', () => setView('grid'));
+    })();
+  </script>
+</AdminLayout>
+

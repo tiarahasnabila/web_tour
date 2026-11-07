@@ -1,0 +1,185 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { sql } from '../../../lib/db';
+import { verifySessionToken } from '../../../lib/auth';
+import bcrypt from 'bcryptjs';
+
+// Wajib login
+const session = verifySessionToken(Astro.cookies.get('admin_session')?.value);
+if (!session) {
+  return Astro.redirect('/admin/login');
+}
+
+let flash: { type: 'success' | 'error'; text: string } | null = null;
+let displayNameVal = '';
+let usernameVal = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const get = (k: string) => formData.get(k)?.toString().trim() || '';
+
+    const username = get('username').toLowerCase();
+    const displayName = get('display_name');
+    const password = formData.get('password')?.toString() || '';
+
+    displayNameVal = displayName;
+    usernameVal = username;
+
+    if (!/^[a-z0-9_.]{3,30}$/.test(username)) {
+      flash = { type: 'error', text: 'Username harus 3-30 karakter (huruf kecil, angka, titik, atau underscore).' };
+    } else if (password.length < 8) {
+      flash = { type: 'error', text: 'Password awal minimal 8 karakter.' };
+    } else {
+      const taken = await sql`SELECT id FROM admins WHERE username = ${username} LIMIT 1;`;
+      if (taken.length > 0) {
+        flash = { type: 'error', text: `Username "${username}" sudah digunakan oleh admin lain.` };
+      } else {
+        const hash = bcrypt.hashSync(password, 10);
+        await sql`
+          INSERT INTO admins (username, display_name, password_hash)
+          VALUES (${username}, ${displayName || null}, ${hash});
+        `;
+        return Astro.redirect('/admin/users?saved=1');
+      }
+    }
+  } catch (err: any) {
+    console.error('Create admin error:', err);
+    flash = { type: 'error', text: 'Terjadi kesalahan: ' + err.message };
+  }
+}
+---
+
+<AdminLayout title="Tambah Akun Admin" active="users">
+  <div class="space-y-6 max-w-2xl pb-12">
+    <!-- Header with Back Button -->
+    <div class="flex items-center gap-3.5">
+      <a
+        href="/admin/users"
+        class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:border-primary-200 dark:hover:border-primary-500/30 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-xs hover:shadow-sm transition flex items-center justify-center shrink-0 group"
+        title="Kembali ke Daftar Admin"
+        aria-label="Kembali ke Daftar Admin"
+      >
+        <svg class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </a>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">+ Tambah Akun Admin</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Buat akun untuk staf atau pengelola website lainnya.</p>
+      </div>
+    </div>
+
+    {flash && (
+      <div class:list={[
+        'px-4 py-3 rounded-xl text-sm font-medium border flex items-center gap-2.5',
+        flash.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800',
+      ]}>
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d={flash.type === 'success' ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+        </svg>
+        <span>{flash.text}</span>
+      </div>
+    )}
+
+    <!-- Form Tambah Admin Baru -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
+      <form method="POST" class="space-y-5">
+        <div>
+          <label for="display_name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            Nama Tampilan
+          </label>
+          <input
+            id="display_name"
+            name="display_name"
+            type="text"
+            value={displayNameVal}
+            placeholder="Contoh: CS Salsa"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-sm"
+          />
+          <p class="text-xs text-slate-400 mt-1">Nama lengkap atau panggilan yang ditampilkan di panel.</p>
+        </div>
+
+        <div>
+          <label for="username" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            Username Login <span class="text-red-500">*</span>
+          </label>
+          <div class="flex rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 transition shadow-sm bg-white dark:bg-slate-800">
+            <span class="px-3.5 flex items-center bg-slate-50 dark:bg-slate-900 text-slate-400 text-sm border-r border-slate-300 dark:border-slate-700 font-mono">@</span>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              required
+              minlength="3"
+              maxlength="30"
+              pattern="[a-zA-Z0-9_.]+"
+              value={usernameVal}
+              placeholder="salsa_tour"
+              class="flex-1 px-3.5 py-2.5 text-sm outline-none bg-transparent text-slate-900 dark:text-white"
+            />
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Digunakan untuk login (huruf kecil, angka, titik, underscore).</p>
+        </div>
+
+        <div>
+          <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            Password Awal <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              minlength="8"
+              placeholder="Minimal 8 karakter"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-sm pr-11"
+            />
+            <button
+              type="button"
+              id="toggle-pw-btn"
+              class="absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              title="Lihat password"
+              aria-label="Lihat password"
+            >
+              <svg id="eye-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Berikan password ini ke staf, admin dapat mengubahnya sewaktu-waktu di halaman profil.</p>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <a
+            href="/admin/users"
+            class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold transition"
+          >
+            Batal
+          </a>
+          <button
+            type="submit"
+            class="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition shadow-md shadow-primary-600/20 cursor-pointer"
+          >
+            Buat Akun Admin
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script is:inline>
+    (function() {
+      const toggleBtn = document.getElementById('toggle-pw-btn');
+      const pwInput = document.getElementById('password');
+      toggleBtn?.addEventListener('click', () => {
+        if (!pwInput) return;
+        const isPw = pwInput.type === 'password';
+        pwInput.type = isPw ? 'text' : 'password';
+      });
+    })();
+  </script>
+</AdminLayout>
+

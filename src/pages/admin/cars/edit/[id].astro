@@ -1,0 +1,244 @@
+---
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import { sql } from '../../../../lib/db';
+import { verifySessionToken } from '../../../../lib/auth';
+
+const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+const carId = Number(Astro.params.id);
+if (isNaN(carId)) {
+  return Astro.redirect('/admin/cars');
+}
+
+let car: any = null;
+let errorMessage = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const get = (k: string) => formData.get(k)?.toString().trim() || '';
+
+    const title = get('title');
+    const slug = get('slug').toLowerCase();
+    const thumbnail = get('thumbnail');
+    const featuresInput = get('features');
+    const whatsapp_message = get('whatsapp_message');
+    const content = get('content');
+    const price = get('price') || 'Rp 400.000';
+    const price_unit = get('price_unit') || '/ hari';
+    const capacity = get('capacity') || '6-7 Orang';
+    const transmission = get('transmission') || 'Manual / Matic';
+    const badge = get('badge') || 'Tersedia';
+
+    const featuresArray = featuresInput.split(',').map(s => s.trim()).filter(Boolean);
+    car = { id: carId, title, slug, thumbnail, features: featuresArray, whatsapp_message, content, price, price_unit, capacity, transmission, badge };
+
+    if (!title || !slug || !thumbnail) {
+      errorMessage = 'Nama mobil, slug, dan thumbnail wajib diisi.';
+    } else {
+      const slugCheck = await sql`SELECT id FROM cars WHERE slug = ${slug} AND id != ${carId} LIMIT 1;`;
+      if (slugCheck.length > 0) {
+        errorMessage = `Slug "${slug}" sudah dipakai unit mobil lain.`;
+      } else {
+        await sql`
+          UPDATE cars
+          SET title = ${title}, slug = ${slug}, thumbnail = ${thumbnail},
+              features = ${JSON.stringify(featuresArray)}, whatsapp_message = ${whatsapp_message}, content = ${content},
+              price = ${price}, price_unit = ${price_unit}, capacity = ${capacity}, transmission = ${transmission}, badge = ${badge}
+          WHERE id = ${carId};
+        `;
+        return Astro.redirect('/admin/cars?saved=1');
+      }
+    }
+  } catch (err: any) {
+    console.error('Update car error:', err);
+    errorMessage = 'Terjadi kesalahan: ' + err.message;
+  }
+}
+
+if (!car) {
+  const rows = await sql`SELECT * FROM cars WHERE id = ${carId} LIMIT 1;`;
+  if (rows.length === 0) {
+    return Astro.redirect('/admin/cars');
+  }
+  car = rows[0];
+  try {
+    car.features = typeof car.features === 'string' ? JSON.parse(car.features) : (car.features || []);
+  } catch {
+    car.features = [];
+  }
+}
+
+const featuresString = Array.isArray(car.features) ? car.features.join(', ') : '';
+const input = 'w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-sm placeholder:text-slate-400';
+const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5';
+---
+
+<AdminLayout title="Edit Mobil" active="cars">
+  <div class="space-y-6 pb-12">
+    <div class="flex items-center justify-between">
+      <div>
+        <a href="/admin/cars" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-primary-600 transition mb-1">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          Kembali ke daftar armada
+        </a>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Edit Unit Armada: {car.title}</h1>
+      </div>
+    </div>
+
+    {errorMessage && (
+      <div class="px-4 py-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2">
+        <svg class="w-5 h-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        <span>{errorMessage}</span>
+      </div>
+    )}
+
+    <form method="POST" class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Section 1: Informasi Mobil -->
+        <section class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2 text-base">
+              <span class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">1</span>
+              <span>Spesifikasi & Informasi Unit</span>
+            </h3>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">ID #{car.id}</span>
+          </div>
+
+          <div>
+            <label for="title" class={label}>Nama Unit Mobil <span class="text-rose-500">*</span></label>
+            <input id="title" name="title" type="text" required value={car.title} placeholder="Contoh: All New Avanza" class={input} />
+          </div>
+
+          <div>
+            <label for="slug" class={label}>Slug URL Website <span class="text-rose-500">*</span></label>
+            <div class="flex rounded-xl border border-slate-300 overflow-hidden focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 transition shadow-sm bg-white">
+              <span class="px-3.5 flex items-center bg-slate-50 text-slate-400 text-xs font-mono border-r border-slate-300">/layanan#</span>
+              <input id="slug" name="slug" type="text" required value={car.slug} class="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent" />
+            </div>
+          </div>
+
+          <!-- Pricing Grid -->
+          <div class="grid sm:grid-cols-2 gap-4 pt-3 border-t border-slate-100">
+            <div>
+              <label for="price" class={label}>Tarif Sewa</label>
+              <input id="price" name="price" type="text" value={car.price || 'Rp 400.000'} class={input} />
+            </div>
+            <div>
+              <label for="price_unit" class={label}>Satuan Waktu Tarif</label>
+              <input id="price_unit" name="price_unit" type="text" value={car.price_unit || '/ hari'} class={input} />
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label for="capacity" class={label}>Kapasitas Penumpang</label>
+              <input id="capacity" name="capacity" type="text" value={car.capacity || '6-7 Orang'} class={input} />
+            </div>
+            <div>
+              <label for="transmission" class={label}>Tipe Transmisi</label>
+              <input id="transmission" name="transmission" type="text" value={car.transmission || 'Manual / Matic'} class={input} />
+            </div>
+            <div>
+              <label for="badge" class={label}>Badge / Tag Status</label>
+              <input id="badge" name="badge" type="text" value={car.badge || 'Tersedia'} class={input} />
+            </div>
+          </div>
+
+          <div>
+            <label for="features" class={label}>Fasilitas Rental (pisahkan dengan koma)</label>
+            <input id="features" name="features" type="text" value={featuresString} class={input} />
+            <p class="text-[11px] text-slate-400 mt-1">Akan ditampilkan sebagai tag/fitur dalam kartu armada di halaman layanan.</p>
+          </div>
+
+          <div>
+            <label for="whatsapp_message" class={label}>Pesan WhatsApp Default</label>
+            <input id="whatsapp_message" name="whatsapp_message" type="text" value={car.whatsapp_message || ''} class={input} />
+          </div>
+
+          <div>
+            <label for="content" class={label}>Deskripsi Unit & Ketentuan Sewa</label>
+            <textarea id="content" name="content" rows="6" class={`${input} font-mono text-xs leading-relaxed`}>{car.content || ''}</textarea>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Column: Media Preview Box -->
+      <div class="space-y-6">
+        <section class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-5 lg:sticky lg:top-24">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm">Media Foto Mobil</h3>
+            <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary-50 text-primary-700">Pratinjau</span>
+          </div>
+
+          <!-- Thumbnail Preview -->
+          <div class="aspect-[4/3] rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center relative shadow-inner group">
+            <img
+              id="preview"
+              src={car.thumbnail}
+              alt={car.title}
+              class:list={['w-full h-full object-cover transition duration-300 group-hover:scale-105', !car.thumbnail && 'hidden']}
+            />
+            <div id="preview-empty" class:list={['flex flex-col items-center gap-2 text-slate-400 p-4 text-center', car.thumbnail && 'hidden']}>
+              <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span class="text-xs font-medium">Pratinjau foto mobil akan muncul di sini</span>
+            </div>
+          </div>
+
+          <div>
+            <label for="thumbnail" class={label}>URL Foto Mobil <span class="text-rose-500">*</span></label>
+            <input id="thumbnail" name="thumbnail" type="text" required value={car.thumbnail} class={input} />
+          </div>
+
+          <div class="flex gap-3 pt-4 border-t border-slate-100">
+            <a href="/admin/cars" class="flex-1 text-center px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition shadow-sm">
+              Batal
+            </a>
+            <button
+              type="submit"
+              class="flex-1 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition shadow-md shadow-primary-600/20 cursor-pointer text-center"
+            >
+              Simpan Perubahan
+            </button>
+          </div>
+        </section>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+
+<script is:inline>
+  const urlInput = document.getElementById('thumbnail');
+  const img = document.getElementById('preview');
+  const empty = document.getElementById('preview-empty');
+  function update() {
+    const v = urlInput ? urlInput.value.trim() : '';
+    if (!v) {
+      if (img) img.classList.add('hidden');
+      if (empty) empty.classList.remove('hidden');
+      return;
+    }
+    if (img) img.src = v;
+  }
+  if (img) {
+    img.addEventListener('load', () => {
+      img.classList.remove('hidden');
+      if (empty) empty.classList.add('hidden');
+    });
+    img.addEventListener('error', () => {
+      img.classList.add('hidden');
+      if (empty) {
+        empty.classList.remove('hidden');
+        empty.innerHTML = '<span class="text-xs text-rose-500 font-medium">⚠️ Gambar tidak dapat dimuat dari URL ini</span>';
+      }
+    });
+  }
+  if (urlInput) {
+    urlInput.addEventListener('input', update);
+  }
+</script>

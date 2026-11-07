@@ -1,0 +1,470 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { sql } from '../../lib/db';
+import { verifySessionToken } from '../../lib/auth';
+
+// Wajib login
+const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+let tours: any[] = [];
+let cars: any[] = [];
+let inquiriesCount = 0;
+let newInquiriesCount = 0;
+let testimonialsCount = 0;
+let dbError = false;
+
+try {
+  const [toursRes, carsRes, inqRes, newInqRes, testRes] = await Promise.all([
+    sql`SELECT id, title, slug, thumbnail, tagline, content, created_at FROM tours ORDER BY created_at DESC, id DESC;`,
+    sql`SELECT id, title, slug, thumbnail, features, content, created_at FROM cars ORDER BY created_at DESC, id DESC;`,
+    sql`SELECT count(*) as count FROM inquiries;`,
+    sql`SELECT count(*) as count FROM inquiries WHERE status = 'baru';`,
+    sql`SELECT count(*) as count FROM testimonials;`,
+  ]);
+  tours = toursRes;
+  cars = carsRes;
+  inquiriesCount = Number(inqRes[0]?.count || 0);
+  newInquiriesCount = Number(newInqRes[0]?.count || 0);
+  testimonialsCount = Number(testRes[0]?.count || 0);
+} catch (err) {
+  console.error('Dashboard fetch error:', err);
+  dbError = true;
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+const isRecent = (d: any) => d && Date.now() - new Date(d).getTime() <= 30 * DAY;
+
+const toursRecent = tours.filter((t) => isRecent(t.created_at)).length;
+const carsRecent = cars.filter((c) => isRecent(c.created_at)).length;
+
+// Item yang datanya belum lengkap (tanpa tagline / deskripsi)
+const incompleteTours = tours.filter((t) => !t.tagline?.trim() || !t.content?.trim());
+const incompleteCars = cars.filter((c) => !c.content?.trim());
+const incompleteCount = incompleteTours.length + incompleteCars.length;
+
+const total = tours.length + cars.length;
+const tourPct = total ? Math.round((tours.length / total) * 100) : 0;
+
+const stats = [
+  {
+    label: 'Paket Wisata',
+    value: tours.length,
+    note: `+${toursRecent} dalam 30 hari`,
+    href: '/admin/tours',
+    accent: 'bg-primary-50 text-primary-600',
+    icon: 'M3 7l9-4 9 4-9 4-9-4zm0 5l9 4 9-4M3 17l9 4 9-4',
+  },
+  {
+    label: 'Armada Mobil',
+    value: cars.length,
+    note: `+${carsRecent} dalam 30 hari`,
+    href: '/admin/cars',
+    accent: 'bg-blue-50 text-blue-600',
+    icon: 'M5 17h-.5A1.5 1.5 0 013 15.5V12l2-5h14l2 5v3.5a1.5 1.5 0 01-1.5 1.5H19M7 17a2 2 0 104 0 2 2 0 00-4 0zm6 0a2 2 0 104 0 2 2 0 00-4 0',
+  },
+  {
+    label: 'Pesan / Leads Masuk',
+    value: inquiriesCount,
+    note: newInquiriesCount > 0 ? `${newInquiriesCount} belum dihubungi` : 'Semua sudah ditangani',
+    href: '/admin/inquiries',
+    accent: newInquiriesCount > 0 ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600',
+    icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
+  },
+  {
+    label: 'Testimoni Pelanggan',
+    value: testimonialsCount,
+    note: 'Ulasan di beranda',
+    href: '/admin/testimonials',
+    accent: 'bg-violet-50 text-violet-600',
+    icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+  },
+];
+
+const hour = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: 'Asia/Jakarta' }));
+const greeting = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
+const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+const fmtDate = (d: any) => (d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-');
+const parseFeatures = (f: any): string[] => {
+  try { return Array.isArray(f) ? f : JSON.parse(f || '[]'); } catch { return []; }
+};
+---
+
+<AdminLayout title="Dashboard" active="dashboard">
+  <div class="space-y-8">
+    <!-- Sapaan -->
+    <section class="relative overflow-hidden rounded-3xl bg-navy-950 text-white p-6 sm:p-8">
+      <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-primary-500/20 blur-3xl"></div>
+      <div class="absolute right-24 -bottom-20 w-48 h-48 rounded-full bg-primary-400/10 blur-3xl"></div>
+      <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <p class="text-sm text-primary-300">{today}</p>
+          <h1 class="mt-1 text-2xl sm:text-3xl font-bold">{greeting}, <span class="capitalize">{user.username}</span> 👋</h1>
+          <p class="mt-2 text-sm text-slate-400 max-w-md">Ringkasan konten website Beyond Jogja Tours hari ini.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a href="/admin/tours/tambah" class="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            Paket Baru
+          </a>
+          <a href="/admin/cars/tambah" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            Mobil Baru
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {dbError && (
+      <div class="px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+        Gagal memuat data dari database. Periksa koneksi Neon / DATABASE_URL.
+      </div>
+    )}
+
+    <!-- Kartu statistik -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {stats.map((s) => {
+        const Tag = s.href ? 'a' : 'div';
+        return (
+          <Tag href={s.href ?? undefined} class:list={[
+            'bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-4 transition',
+            s.href && 'hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5 group',
+          ]}>
+            <div class="flex items-start justify-between">
+              <p class="text-sm font-medium text-slate-500">{s.label}</p>
+              <span class:list={['w-10 h-10 rounded-xl flex items-center justify-center', s.accent]}>
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d={s.icon} />
+                </svg>
+              </span>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-slate-900">{s.value}</p>
+              <p class="mt-1 text-xs text-slate-400 flex items-center gap-1">
+                {s.note}
+                {s.href && <span class="ml-auto text-primary-600 opacity-0 group-hover:opacity-100 transition">Kelola &rarr;</span>}
+              </p>
+            </div>
+          </Tag>
+        );
+      })}
+    </section>
+
+    <!-- Komposisi + aksi cepat -->
+    <section class="grid lg:grid-cols-3 gap-6">
+      <!-- Komposisi Konten Card -->
+      <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+        <div>
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+            <div>
+              <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">📊</span>
+                <span>Komposisi Konten</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Proporsi katalog paket wisata & armada mobil aktif</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+              Total: {total} Item
+            </span>
+          </div>
+
+          <!-- Dual Color Segmented Progress Bar -->
+          <div class="space-y-2">
+            <div class="h-3.5 w-full rounded-full bg-slate-100 overflow-hidden flex p-0.5 gap-1 border border-slate-200">
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500"
+                style={`width: ${tourPct}%`}
+                title={`Paket Wisata: ${tourPct}%`}
+              ></div>
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 transition-all duration-500"
+                style={`width: ${total ? 100 - tourPct : 0}%`}
+                title={`Armada Mobil: ${total ? 100 - tourPct : 0}%`}
+              ></div>
+            </div>
+          </div>
+
+          <!-- Stat Breakdown Cards Grid -->
+          <div class="grid sm:grid-cols-2 gap-4 mt-5">
+            <!-- Paket Wisata Box -->
+            <a
+              href="/admin/tours"
+              class="group p-4 rounded-2xl bg-slate-50/80 hover:bg-primary-50/50 border border-slate-200 hover:border-primary-300 transition flex items-center justify-between shadow-sm"
+            >
+              <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-primary-500/10 text-primary-600 flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
+                  🎒
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Paket Wisata</p>
+                  <p class="text-lg font-bold text-slate-900 group-hover:text-primary-700 transition">
+                    {tours.length} <span class="text-xs font-normal text-slate-500">item</span>
+                  </p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-primary-100 text-primary-800">
+                  {tourPct}%
+                </span>
+                <p class="text-[10px] text-slate-400 mt-1 group-hover:text-primary-600 transition">Kelola &rarr;</p>
+              </div>
+            </a>
+
+            <!-- Armada Mobil Box -->
+            <a
+              href="/admin/cars"
+              class="group p-4 rounded-2xl bg-slate-50/80 hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 transition flex items-center justify-between shadow-sm"
+            >
+              <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
+                  🚗
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Armada Mobil</p>
+                  <p class="text-lg font-bold text-slate-900 group-hover:text-sky-700 transition">
+                    {cars.length} <span class="text-xs font-normal text-slate-500">item</span>
+                  </p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800">
+                  {total ? 100 - tourPct : 0}%
+                </span>
+                <p class="text-[10px] text-slate-400 mt-1 group-hover:text-sky-600 transition">Kelola &rarr;</p>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Incomplete Data Alert / Box -->
+        {incompleteCount > 0 && (
+          <div class="mt-6 pt-5 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-xs font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1.5">
+                <span>⚠️</span> Perlu Dilengkapi ({incompleteCount})
+              </p>
+              <span class="text-[11px] text-slate-400">Belum ada tagline / deskripsi</span>
+            </div>
+            <ul class="space-y-2">
+              {incompleteTours.slice(0, 3).map((t) => (
+                <li class="flex items-center justify-between p-2 rounded-xl bg-amber-50/60 border border-amber-200/60 text-xs">
+                  <span class="truncate text-slate-700 font-medium">
+                    <span class="px-1.5 py-0.5 rounded bg-primary-100 text-primary-700 text-[10px] font-bold mr-2">Paket</span>
+                    {t.title}
+                  </span>
+                  <a href={`/admin/tours/edit/${t.id}`} class="ml-2 font-bold text-amber-700 hover:underline shrink-0">
+                    Lengkapi &rarr;
+                  </a>
+                </li>
+              ))}
+              {incompleteCars.slice(0, 2).map((c) => (
+                <li class="flex items-center justify-between p-2 rounded-xl bg-amber-50/60 border border-amber-200/60 text-xs">
+                  <span class="truncate text-slate-700 font-medium">
+                    <span class="px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 text-[10px] font-bold mr-2">Mobil</span>
+                    {c.title}
+                  </span>
+                  <a href={`/admin/cars/edit/${c.id}`} class="ml-2 font-bold text-amber-700 hover:underline shrink-0">
+                    Lengkapi &rarr;
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <!-- Aksi Cepat Card -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+        <div>
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+            <div>
+              <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <span class="text-amber-500">⚡</span>
+                <span>Aksi Cepat</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Pintasan navigasi & tambah data</p>
+            </div>
+          </div>
+
+          <!-- Action Items Grid: 2 Kolom x 2 Baris (Hemat Ruang) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Tambah Paket -->
+            <a
+              href="/admin/tours/tambah"
+              class="group flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 hover:bg-primary-50/80 border border-slate-200 hover:border-primary-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div class="w-9 h-9 rounded-xl bg-primary-600 text-white flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold text-slate-900 group-hover:text-primary-700 transition truncate">Tambah Paket</p>
+                <p class="text-[10px] text-slate-400 truncate mt-0.5">Rute paket baru</p>
+              </div>
+            </a>
+
+            <!-- Tambah Mobil -->
+            <a
+              href="/admin/cars/tambah"
+              class="group flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 hover:bg-sky-50/80 border border-slate-200 hover:border-sky-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div class="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold text-slate-900 group-hover:text-sky-700 transition truncate">Tambah Mobil</p>
+                <p class="text-[10px] text-slate-400 truncate mt-0.5">Unit rental baru</p>
+              </div>
+            </a>
+
+            <!-- Kelola Semua Paket -->
+            <a
+              href="/admin/tours"
+              class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <span class="w-8 h-8 rounded-xl bg-slate-200/70 text-slate-600 flex items-center justify-center text-xs group-hover:text-primary-600 transition shrink-0">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4-9 4-9-4zm0 5l9 4 9-4M3 17l9 4 9-4" /></svg>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-bold text-slate-800 truncate">Semua Paket</p>
+                  <p class="text-[10px] text-slate-400 truncate">Katalog wisata</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-50 text-primary-700 border border-primary-200/60 font-mono shrink-0 ml-1">
+                {tours.length}
+              </span>
+            </a>
+
+            <!-- Kelola Armada -->
+            <a
+              href="/admin/cars"
+              class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <span class="w-8 h-8 rounded-xl bg-slate-200/70 text-slate-600 flex items-center justify-center text-xs group-hover:text-sky-600 transition shrink-0">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 17h-.5A1.5 1.5 0 013 15.5V12l2-5h14l2 5v3.5a1.5 1.5 0 01-1.5 1.5H19M7 17a2 2 0 104 0 2 2 0 00-4 0zm6 0a2 2 0 104 0 2 2 0 00-4 0" /></svg>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-bold text-slate-800 truncate">Semua Armada</p>
+                  <p class="text-[10px] text-slate-400 truncate">Unit kendaraan</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60 font-mono shrink-0 ml-1">
+                {cars.length}
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Buka Website Link Card -->
+        <div class="pt-4 mt-4 border-t border-slate-100">
+          <a
+            href="/"
+            target="_blank"
+            class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition shadow-sm"
+          >
+            <svg class="w-3.5 h-3.5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+            <span>Buka Website Publik</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Terbaru -->
+    <section class="grid lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">🎒</span>
+              <h2 class="font-bold text-slate-900 text-base">Paket Terbaru</h2>
+            </div>
+            <a href="/admin/tours" class="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline">Lihat semua &rarr;</a>
+          </div>
+          {tours.length === 0 ? (
+            <p class="px-6 py-10 text-center text-sm text-slate-400">Belum ada paket.</p>
+          ) : (
+            <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {tours.slice(0, 4).map((t) => (
+                <a
+                  href={`/admin/tours/edit/${t.id}`}
+                  class="group flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/70 hover:bg-primary-50/60 border border-slate-200/70 hover:border-primary-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <img
+                    src={t.thumbnail}
+                    alt=""
+                    loading="lazy"
+                    class="w-12 h-12 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-200/60 group-hover:scale-105 transition-transform"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-slate-900 group-hover:text-primary-600 transition truncate">
+                      {t.title}
+                    </p>
+                    <p class="text-xs text-slate-400 truncate mt-0.5">
+                      {t.tagline || 'Tanpa tagline'}
+                    </p>
+                    <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400">
+                      <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>{fmtDate(t.created_at)}</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-sm font-bold">🚗</span>
+              <h2 class="font-bold text-slate-900 text-base">Armada Terbaru</h2>
+            </div>
+            <a href="/admin/cars" class="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline">Lihat semua &rarr;</a>
+          </div>
+          {cars.length === 0 ? (
+            <p class="px-6 py-10 text-center text-sm text-slate-400">Belum ada mobil.</p>
+          ) : (
+            <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {cars.slice(0, 4).map((c) => (
+                <a
+                  href={`/admin/cars/edit/${c.id}`}
+                  class="group flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/70 hover:bg-sky-50/60 border border-slate-200/70 hover:border-sky-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <img
+                    src={c.thumbnail}
+                    alt=""
+                    loading="lazy"
+                    class="w-12 h-12 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-200/60 group-hover:scale-105 transition-transform"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-slate-900 group-hover:text-sky-600 transition truncate">
+                      {c.title}
+                    </p>
+                    <p class="text-xs text-slate-400 truncate mt-0.5">
+                      {parseFeatures(c.features).length} fasilitas
+                    </p>
+                    <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400">
+                      <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>{fmtDate(c.created_at)}</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  </div>
+</AdminLayout>

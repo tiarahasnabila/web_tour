@@ -1,22 +1,19 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import { getAllTours } from '../lib/tours';
+import { getAllCars } from '../lib/cars';
+import { getAllTestimonials } from '../lib/testimonials';
 import { getWhatsAppUrl, OFFICE_ADDRESS } from '../lib/constants';
 
-const cars = await getCollection('cars');
-const tours = await getCollection('tours');
+const cars = await getAllCars();
+const tours = await getAllTours();
+const testimonials = await getAllTestimonials();
 
 const featuredCars = ['all-new-avanza', 'innova-reborn', 'hiace', 'fortuner']
   .map((slug) => cars.find((car) => car.slug.toLowerCase() === slug))
   .filter((car) => car !== undefined);
 
-// Render markdown content for each featured tour
-const allTours = await Promise.all(
-  tours.slice(0, 3).map(async (tour) => {
-    const { Content } = await tour.render();
-    return { tour, Content };
-  })
-);
+const featuredTours = tours.slice(0, 3);
 ---
 
 <BaseLayout title="Beyond Jogja Tours - Rental Mobil & Paket Wisata di Jogja">
@@ -47,10 +44,10 @@ const allTours = await Promise.all(
           Sewa mobil harian atau langsung paket wisata keliling Jogja — semua bisa diatur sesuai budget dan jadwalmu.
         </p>
         <div class="flex flex-wrap gap-3">
-          <a href="#tours" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary-500/20 text-sm">
+          <a href="/tour-package" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary-500/20 text-sm">
             Lihat Paket Wisata
           </a>
-          <a href="#cars" class="bg-white/6 hover:bg-white/10 border border-white/15 text-white font-medium px-7 py-3.5 rounded-xl transition-all text-sm">
+          <a href="/layanan" class="bg-white/6 hover:bg-white/10 border border-white/15 text-white font-medium px-7 py-3.5 rounded-xl transition-all text-sm">
             Sewa Mobil
           </a>
         </div>
@@ -142,11 +139,14 @@ const allTours = await Promise.all(
   <!-- ===== ARMADA MOBIL ===== -->
   <section id="cars" class="py-24 md:py-32 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
     <div class="container mx-auto px-4">
-      <div class="flex flex-col md:flex-row justify-between items-end mb-14" data-aos="fade-up">
+      <div class="flex flex-col md:flex-row justify-between items-end mb-14 gap-4" data-aos="fade-up">
         <div>
           <p class="text-primary-600 dark:text-primary-400 font-medium text-xs uppercase tracking-[0.15em] mb-2">Armada Terbaik Kami</p>
           <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-display transition-colors">Pilih Mobil Sesuai Kebutuhanmu</h2>
         </div>
+        <a href="/layanan" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:gap-2.5 transition-all">
+          Lihat Semua Armada &rarr;
+        </a>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -204,7 +204,7 @@ const allTours = await Promise.all(
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {allTours.map(({ tour, Content }, index) => (
+        {featuredTours.map((tour, index) => (
           <div data-aos="fade-up" data-aos-delay={index * 100} class="tilt-card bg-white dark:bg-navy-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-white/8 hover:border-primary-200 dark:hover:border-primary-500/20 shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col">
             <div class="h-52 overflow-hidden relative shrink-0">
               <img src={tour.data.thumbnail} alt={tour.data.title} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -217,9 +217,7 @@ const allTours = await Promise.all(
               <!-- Expandable Detail -->
               <div id={`home-detail-${tour.slug}`} class="home-detail-content hidden mb-5">
                 <div class="border-t border-slate-100 dark:border-white/8 pt-4 transition-colors">
-                  <div class="prose prose-sm max-w-none text-slate-600 dark:text-slate-300 prose-headings:text-slate-900 dark:prose-headings:text-white prose-headings:font-semibold transition-colors">
-                    <Content />
-                  </div>
+                  <div class="prose prose-sm max-w-none text-slate-600 dark:text-slate-300 prose-headings:text-slate-900 dark:prose-headings:text-white prose-headings:font-semibold transition-colors" set:html={tour.htmlContent} />
                 </div>
               </div>
 
@@ -303,6 +301,57 @@ const allTours = await Promise.all(
       </div>
     </div>
   </section>
+
+  <!-- ===== TESTIMONI PELANGGAN ===== -->
+  {testimonials.length > 0 && (
+    <section class="py-24 md:py-32 bg-slate-50 dark:bg-navy-900/50 transition-colors duration-300">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <p class="text-primary-600 dark:text-primary-400 font-medium text-xs uppercase tracking-[0.15em] mb-3">Kata Mereka</p>
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-display transition-colors">Cerita Seru Pelanggan Kami</h2>
+          <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-sm leading-relaxed transition-colors">Pengalaman nyata dari wisatawan yang sudah mempercayakan liburannya di Jogja bersama kami.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {testimonials.map((t, idx) => (
+            <div data-aos="fade-up" data-aos-delay={idx * 100} class="bg-white dark:bg-navy-900 rounded-2xl p-7 border border-slate-100 dark:border-white/8 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-3">
+                    <img
+                      src={t.avatar}
+                      alt={t.name}
+                      class="w-11 h-11 rounded-full object-cover border border-slate-200 dark:border-white/10"
+                      onerror="this.src='https://placehold.co/100x100?text=User'"
+                    />
+                    <div>
+                      <h3 class="font-semibold text-slate-900 dark:text-white text-sm">{t.name}</h3>
+                      <p class="text-xs text-slate-400">{t.origin}</p>
+                    </div>
+                  </div>
+                  <div class="flex text-amber-400 text-xs">
+                    {'★'.repeat(t.rating)}
+                  </div>
+                </div>
+
+                {t.trip_package && (
+                  <div class="mb-3">
+                    <span class="inline-block bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 text-[11px] font-medium px-2 py-0.5 rounded-md">
+                      {t.trip_package}
+                    </span>
+                  </div>
+                )}
+
+                <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed italic">
+                  "{t.comment}"
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 
   <!-- ===== PETA ===== -->
   <section class="py-24 md:py-32 bg-white dark:bg-navy-950 transition-colors duration-300">

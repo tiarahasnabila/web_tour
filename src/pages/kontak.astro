@@ -1,6 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../lib/constants';
+import { getSiteSettings } from '../lib/settings';
+
+const settings = await getSiteSettings();
+const PHONE_NUMBER = settings.phone_number;
+const WHATSAPP_NUMBER = settings.whatsapp_number;
+const EMAIL_ADDRESS = settings.email_address;
+const OFFICE_ADDRESS = settings.office_address;
 ---
 
 <BaseLayout title="Hubungi Kami" description="Kontak dan lokasi Beyond Jogja Tours.">
@@ -173,18 +179,25 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
   </section>
 </BaseLayout>
 
-<script define:vars={{ phoneNumber: PHONE_NUMBER }}>
+<script define:vars={{ whatsappNumber: WHATSAPP_NUMBER }}>
   document.addEventListener('astro:page-load', () => {
     const form = document.getElementById('contact-form');
 
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const name    = document.getElementById('name').value.trim();
-      const phone   = document.getElementById('phone').value.trim();
-      const service = document.getElementById('service').value;
-      const date    = document.getElementById('date').value;
-      const message = document.getElementById('message').value.trim();
+      const name    = (document.getElementById('name') as HTMLInputElement)?.value.trim() || '';
+      const phone   = (document.getElementById('phone') as HTMLInputElement)?.value.trim() || '';
+      const service = (document.getElementById('service') as HTMLSelectElement)?.value || '';
+      const date    = (document.getElementById('date') as HTMLInputElement)?.value || '';
+      const message = (document.getElementById('message') as HTMLTextAreaElement)?.value.trim() || '';
+
+      // Simpan lead ke database secara background sebelum membuka WhatsApp
+      fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, service, date, message }),
+      }).catch((err) => console.error('Failed to save inquiry:', err));
 
       // Build WhatsApp message
       let text = `Halo Beyond Jogja Tours! 👋\n\n`;
@@ -196,7 +209,7 @@ import { PHONE_NUMBER, getWhatsAppUrl, EMAIL_ADDRESS, OFFICE_ADDRESS } from '../
       text += `\nMohon info lebih lanjut. Terima kasih!`;
 
       // Clean phone number (remove non-digits, replace leading 0 with 62)
-      const cleanPhone = phoneNumber.replace(/\D/g, '').replace(/^0/, '62');
+      const cleanPhone = (whatsappNumber || '6285213814714').replace(/\D/g, '').replace(/^0/, '62');
       const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
 
       window.open(waUrl, '_blank');

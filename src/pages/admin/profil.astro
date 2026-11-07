@@ -1,0 +1,461 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { sql } from '../../lib/db';
+import { verifySessionToken, createSessionToken } from '../../lib/auth';
+import bcrypt from 'bcryptjs';
+
+const session = verifySessionToken(Astro.cookies.get('admin_session')?.value);
+if (!session) {
+  return Astro.redirect('/admin/login');
+}
+
+const rows = await sql`SELECT id, username, display_name, avatar_url, password_hash, created_at, updated_at FROM admins WHERE username = ${session.username} LIMIT 1;`;
+if (rows.length === 0) {
+  // Akun sudah tidak ada (mis. dihapus) -> paksa login ulang
+  Astro.cookies.delete('admin_session', { path: '/' });
+  return Astro.redirect('/admin/login');
+}
+let admin = rows[0];
+
+type Msg = { type: 'success' | 'error'; text: string } | null;
+let profileMsg: Msg = null;
+let passwordMsg: Msg = null;
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const action = formData.get('_action');
+  const get = (k: string) => formData.get(k)?.toString().trim() || '';
+
+  if (action === 'profile') {
+    const username = get('username').toLowerCase();
+    const displayName = get('display_name');
+    const avatarUrl = get('avatar_url');
+
+    if (!/^[a-z0-9_.]{3,30}$/.test(username)) {
+      profileMsg = { type: 'error', text: 'Username 3–30 karakter, hanya huruf kecil, angka, titik, atau underscore.' };
+    } else if (displayName.length > 100) {
+      profileMsg = { type: 'error', text: 'Nama tampilan maksimal 100 karakter.' };
+    } else {
+      const taken = await sql`SELECT id FROM admins WHERE username = ${username} AND id != ${admin.id} LIMIT 1;`;
+      if (taken.length > 0) {
+        profileMsg = { type: 'error', text: `Username "${username}" sudah dipakai.` };
+      } else {
+        const updated = await sql`
+          UPDATE admins
+          SET username = ${username},
+              display_name = ${displayName || null},
+              avatar_url = ${avatarUrl || null},
+              updated_at = NOW()
+          WHERE id = ${admin.id}
+          RETURNING id, username, display_name, avatar_url, password_hash, created_at, updated_at;
+        `;
+        admin = updated[0];
+
+        // Token sesi berisi username, jadi terbitkan ulang agar tetap login
+        Astro.cookies.set('admin_session', createSessionToken(admin.username), {
+          path: '/',
+          httpOnly: true,
+          secure: import.meta.env.PROD,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7,
+        });
+        profileMsg = { type: 'success', text: 'Profil dan foto berhasil diperbarui.' };
+      }
+    }
+  }
+
+  if (action === 'password') {
+    const current = formData.get('current_password')?.toString() || '';
+    const next = formData.get('new_password')?.toString() || '';
+    const confirm = formData.get('confirm_password')?.toString() || '';
+
+    if (!bcrypt.compareSync(current, admin.password_hash)) {
+      passwordMsg = { type: 'error', text: 'Password saat ini salah.' };
+    } else if (next.length < 8) {
+      passwordMsg = { type: 'error', text: 'Password baru minimal 8 karakter.' };
+    } else if (next !== confirm) {
+      passwordMsg = { type: 'error', text: 'Konfirmasi password tidak sama.' };
+    } else if (bcrypt.compareSync(next, admin.password_hash)) {
+      passwordMsg = { type: 'error', text: 'Password baru tidak boleh sama dengan password lama.' };
+    } else {
+      const hash = bcrypt.hashSync(next, 10);
+      await sql`UPDATE admins SET password_hash = ${hash}, updated_at = NOW() WHERE id = ${admin.id};`;
+      passwordMsg = { type: 'success', text: 'Password berhasil diganti.' };
+    }
+  }
+}
+
+const usingDefaultPassword = bcrypt.compareSync('admin123', admin.password_hash);
+const displayName = admin.display_name || admin.username;
+const initials = displayName.split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+const fmt = (d: any) => (d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-');
+
+const input = 'w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-sm';
+const label = 'block text-sm font-semibold text-slate-700 mb-1.5';
+const alertCls = (m: Msg) => [
+  'px-4 py-3 rounded-xl text-sm font-medium border flex items-center gap-2.5',
+  m?.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800',
+];
+---
+
+<AdminLayout title="Profil Saya" active="profile">
+  <div class="space-y-6 max-w-4xl pb-12">
+    <!-- Header dengan Tombol Back -->
+    <div class="flex items-center gap-3.5">
+      <a
+        href="/admin"
+        class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:border-primary-200 dark:hover:border-primary-500/30 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-xs hover:shadow-sm transition flex items-center justify-center shrink-0 group"
+        title="Kembali ke Dashboard"
+        aria-label="Kembali ke Dashboard"
+      >
+        <svg class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </a>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Profil & Akun</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Kelola foto profil, informasi admin, dan pengaturan keamanan login.</p>
+      </div>
+    </div>
+
+    {usingDefaultPassword && (
+      <div class="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-sm shadow-sm">
+        <svg class="w-5 h-5 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" />
+        </svg>
+        <span>Akun ini masih memakai <b>password bawaan</b>. Segera perbarui di bagian formulir keamanan di bawah.</span>
+      </div>
+    )}
+
+    <!-- Kartu ringkas profil dengan Avatar -->
+    <section class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row sm:items-center gap-6">
+      <div class="relative w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 text-white text-3xl font-bold flex items-center justify-center shadow-lg shadow-primary-600/20 shrink-0 border-2 border-white ring-4 ring-slate-100">
+        {admin.avatar_url ? (
+          <img src={admin.avatar_url} alt={displayName} class="w-full h-full object-cover" />
+        ) : (
+          <span>{initials}</span>
+        )}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <p class="text-xl font-bold text-slate-900 truncate">{displayName}</p>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-200">
+            Administrator
+          </span>
+        </div>
+        <p class="text-sm text-slate-500 mt-0.5 font-mono">@{admin.username}</p>
+        <p class="text-xs text-slate-400 mt-2">
+          Foto profil ditampilkan di header atas dan sidebar panel admin.
+        </p>
+      </div>
+      <div class="sm:border-l sm:border-slate-100 sm:pl-6 text-xs text-slate-500 space-y-1.5 shrink-0">
+        <div><span class="text-slate-400">Bergabung:</span> <b class="text-slate-700 font-semibold">{fmt(admin.created_at)}</b></div>
+        <div><span class="text-slate-400">Pembaruan:</span> <b class="text-slate-700 font-semibold">{fmt(admin.updated_at)}</b></div>
+      </div>
+    </section>
+
+    <div class="grid lg:grid-cols-2 gap-6">
+      <!-- Form Informasi Akun & Upload Foto -->
+      <form method="POST" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-6 flex flex-col justify-between">
+        <input type="hidden" name="_action" value="profile" />
+        <input type="hidden" name="avatar_url" id="avatar_url_input" value={admin.avatar_url ?? ''} />
+
+        <div class="space-y-5">
+          <div class="border-b border-slate-100 pb-4">
+            <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+              <span class="text-primary-600">👤</span> Informasi Profil & Foto
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Unggah foto profil personal Anda atau ubah nama tampilan.</p>
+          </div>
+
+          {profileMsg && (
+            <div class:list={alertCls(profileMsg)}>
+              <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d={profileMsg.type === 'success' ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+              </svg>
+              <span>{profileMsg.text}</span>
+            </div>
+          )}
+
+          <!-- Upload Photo Section -->
+          <div>
+            <label class={label}>Foto Profil</label>
+            <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+              <div class="relative w-16 h-16 rounded-2xl overflow-hidden bg-primary-600 text-white font-bold text-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-sm">
+                <img
+                  id="avatar_preview_img"
+                  src={admin.avatar_url || ''}
+                  alt={displayName}
+                  class:list={['w-full h-full object-cover', !admin.avatar_url && 'hidden']}
+                />
+                <span id="avatar_preview_fallback" class:list={[admin.avatar_url && 'hidden']}>
+                  {initials}
+                </span>
+              </div>
+              
+              <div class="space-y-2 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <input
+                    type="file"
+                    id="avatar_file_input"
+                    accept="image/png, image/jpeg, image/webp"
+                    class="hidden"
+                  />
+                  <button
+                    type="button"
+                    id="trigger_upload_btn"
+                    class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-300 transition shadow-sm cursor-pointer flex items-center gap-1.5"
+                  >
+                    <svg class="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>Pilih Foto</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="remove_avatar_btn"
+                    class:list={[
+                      'px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold border border-rose-200 transition cursor-pointer',
+                      !admin.avatar_url && 'hidden',
+                    ]}
+                  >
+                    Hapus
+                  </button>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-tight">
+                  Format JPG, PNG, atau WebP. Otomatis dioptimalkan & disimpan ke cloud database.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="display_name" class={label}>Nama Tampilan</label>
+            <input
+              id="display_name"
+              name="display_name"
+              type="text"
+              maxlength="100"
+              value={admin.display_name ?? ''}
+              placeholder="Contoh: Budi Santoso"
+              class={input}
+            />
+          </div>
+
+          <div>
+            <label for="username" class={label}>Username Login <span class="text-red-500">*</span></label>
+            <div class="flex rounded-xl border border-slate-300 overflow-hidden focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 transition shadow-sm bg-white">
+              <span class="px-3.5 flex items-center bg-slate-50 text-slate-400 text-sm border-r border-slate-300 font-mono">@</span>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                minlength="3"
+                maxlength="30"
+                pattern="[a-zA-Z0-9_.]+"
+                value={admin.username}
+                autocomplete="username"
+                class="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent"
+              />
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Digunakan untuk login (huruf kecil, angka, titik, underscore).</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-slate-100">
+          <button
+            type="submit"
+            class="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition shadow-md shadow-primary-600/20 cursor-pointer flex items-center gap-2"
+          >
+            <span>Simpan Perubahan</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Form Keamanan Password -->
+      <form method="POST" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-6 flex flex-col justify-between">
+        <input type="hidden" name="_action" value="password" />
+
+        <div class="space-y-5">
+          <div class="border-b border-slate-100 pb-4">
+            <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+              <span class="text-amber-500">🔒</span> Keamanan Password
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Perbarui password Anda secara berkala untuk menjaga keamanan akun.</p>
+          </div>
+
+          {passwordMsg && (
+            <div class:list={alertCls(passwordMsg)}>
+              <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d={passwordMsg.type === 'success' ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+              </svg>
+              <span>{passwordMsg.text}</span>
+            </div>
+          )}
+
+          <div>
+            <label for="current_password" class={label}>Password Saat Ini</label>
+            <input id="current_password" name="current_password" type="password" required autocomplete="current-password" placeholder="••••••••" class={input} />
+          </div>
+
+          <div>
+            <label for="new_password" class={label}>Password Baru</label>
+            <input id="new_password" name="new_password" type="password" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter" class={input} />
+            <div class="mt-2.5 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div id="pw-bar" class="h-full w-0 transition-all"></div>
+            </div>
+            <p id="pw-hint" class="text-xs text-slate-400 mt-1.5">Minimal 8 karakter dengan kombinasi angka & simbol.</p>
+          </div>
+
+          <div>
+            <label for="confirm_password" class={label}>Konfirmasi Password Baru</label>
+            <input id="confirm_password" name="confirm_password" type="password" required minlength="8" autocomplete="new-password" placeholder="Ulangi password baru" class={input} />
+            <p id="pw-match" class="text-xs mt-1.5 hidden"></p>
+          </div>
+
+          <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+            <input id="pw-show" type="checkbox" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500/20" />
+            <span>Tampilkan isi password</span>
+          </label>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t border-slate-100">
+          <button
+            type="submit"
+            class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition shadow-md shadow-slate-900/10 cursor-pointer"
+          >
+            Perbarui Password
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</AdminLayout>
+
+<script is:inline>
+  (function () {
+    // 1. Password Strength and Show/Hide Logic
+    const next = document.getElementById('new_password');
+    const confirm = document.getElementById('confirm_password');
+    const bar = document.getElementById('pw-bar');
+    const hint = document.getElementById('pw-hint');
+    const match = document.getElementById('pw-match');
+    const levels = [
+      { w: '0%', c: '', t: 'Minimal 8 karakter.' },
+      { w: '25%', c: 'bg-red-500', t: 'Kekuatan: Lemah' },
+      { w: '50%', c: 'bg-amber-500', t: 'Kekuatan: Cukup' },
+      { w: '75%', c: 'bg-lime-500', t: 'Kekuatan: Kuat' },
+      { w: '100%', c: 'bg-emerald-500', t: 'Kekuatan: Sangat kuat & aman' },
+    ];
+
+    function strength(v) {
+      if (!v) return 0;
+      let s = 0;
+      if (v.length >= 8) s++;
+      if (v.length >= 12) s++;
+      if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+      if (/\d/.test(v) && /[^A-Za-z0-9]/.test(v)) s++;
+      return Math.max(1, Math.min(4, s));
+    }
+
+    function update() {
+      if (!next || !bar || !hint) return;
+      const l = levels[strength(next.value)];
+      bar.style.width = l.w;
+      bar.className = 'h-full transition-all ' + l.c;
+      hint.textContent = l.t;
+
+      if (!confirm || !match) return;
+      if (!confirm.value) { match.classList.add('hidden'); return; }
+      const ok = confirm.value === next.value;
+      match.classList.remove('hidden');
+      match.textContent = ok ? '✓ Password cocok' : '✗ Password tidak sama';
+      match.className = 'text-xs mt-1.5 font-medium ' + (ok ? 'text-emerald-600' : 'text-red-600');
+    }
+
+    next?.addEventListener('input', update);
+    confirm?.addEventListener('input', update);
+    document.getElementById('pw-show')?.addEventListener('change', (e) => {
+      const type = e.target.checked ? 'text' : 'password';
+      ['current_password', 'new_password', 'confirm_password'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.type = type;
+      });
+    });
+
+    // 2. Client-side Avatar Upload & Canvas Compression Logic
+    const triggerUploadBtn = document.getElementById('trigger_upload_btn');
+    const avatarFileInput = document.getElementById('avatar_file_input');
+    const avatarUrlInput = document.getElementById('avatar_url_input');
+    const avatarPreviewImg = document.getElementById('avatar_preview_img');
+    const avatarPreviewFallback = document.getElementById('avatar_preview_fallback');
+    const removeAvatarBtn = document.getElementById('remove_avatar_btn');
+
+    triggerUploadBtn?.addEventListener('click', () => {
+      avatarFileInput?.click();
+    });
+
+    avatarFileInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        alert('File harus berupa gambar (JPG, PNG, atau WebP).');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const maxDim = 256;
+          let w = img.width;
+          let h = img.height;
+          
+          if (w > h) {
+            if (w > maxDim) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            }
+          } else {
+            if (h > maxDim) {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          // Compress to lightweight JPEG data URL (~15-25KB)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+          if (avatarUrlInput) avatarUrlInput.value = dataUrl;
+          if (avatarPreviewImg) {
+            avatarPreviewImg.src = dataUrl;
+            avatarPreviewImg.classList.remove('hidden');
+          }
+          if (avatarPreviewFallback) avatarPreviewFallback.classList.add('hidden');
+          if (removeAvatarBtn) removeAvatarBtn.classList.remove('hidden');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    removeAvatarBtn?.addEventListener('click', () => {
+      if (avatarUrlInput) avatarUrlInput.value = '';
+      if (avatarPreviewImg) {
+        avatarPreviewImg.src = '';
+        avatarPreviewImg.classList.add('hidden');
+      }
+      if (avatarPreviewFallback) avatarPreviewFallback.classList.remove('hidden');
+      if (removeAvatarBtn) removeAvatarBtn.classList.add('hidden');
+      if (avatarFileInput) avatarFileInput.value = '';
+    });
+  })();
+</script>

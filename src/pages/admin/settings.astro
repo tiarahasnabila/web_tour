@@ -1,0 +1,175 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { sql } from '../../lib/db';
+import { verifySessionToken } from '../../lib/auth';
+
+const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+let flash: { type: 'success' | 'error'; text: string } | null = null;
+let settings: any = {};
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const get = (k: string) => formData.get(k)?.toString().trim() || '';
+
+    const site_title = get('site_title');
+    const phone_number = get('phone_number');
+    const whatsapp_number = get('whatsapp_number').replace(/\D/g, '');
+    const email_address = get('email_address');
+    const office_address = get('office_address');
+    const instagram_url = get('instagram_url');
+    const operating_hours = get('operating_hours');
+    const google_analytics_id = get('google_analytics_id');
+    const google_site_verification = get('google_site_verification');
+    const canonical_site_url = get('canonical_site_url') || 'https://beyondjogjatours.com';
+
+    if (!site_title || !whatsapp_number) {
+      flash = { type: 'error', text: 'Nama Website dan Nomor WhatsApp wajib diisi.' };
+    } else {
+      await sql`
+        UPDATE site_settings
+        SET site_title = ${site_title},
+            phone_number = ${phone_number},
+            whatsapp_number = ${whatsapp_number},
+            email_address = ${email_address},
+            office_address = ${office_address},
+            instagram_url = ${instagram_url},
+            operating_hours = ${operating_hours},
+            google_analytics_id = ${google_analytics_id},
+            google_site_verification = ${google_site_verification},
+            canonical_site_url = ${canonical_site_url},
+            updated_at = NOW()
+        WHERE id = 1;
+      `;
+      flash = { type: 'success', text: 'Pengaturan kontak, SEO & analitik berhasil disimpan!' };
+    }
+  } catch (err: any) {
+    console.error('Settings update error:', err);
+    flash = { type: 'error', text: 'Gagal menyimpan pengaturan: ' + err.message };
+  }
+}
+
+try {
+  const rows = await sql`SELECT * FROM site_settings WHERE id = 1 LIMIT 1;`;
+  settings = rows[0] || {};
+} catch (err: any) {
+  console.error('Fetch settings error:', err);
+}
+
+const input = 'w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-sm placeholder:text-slate-400';
+const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5';
+---
+
+<AdminLayout title="Pengaturan Website" active="settings">
+  <div class="space-y-6 max-w-4xl pb-12">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pengaturan Kontak & Website</h1>
+      <p class="text-sm text-slate-500 mt-1">Ubah nomor WhatsApp, alamat kantor, dan kontak publik tanpa perlu edit kode.</p>
+    </div>
+
+    {flash && (
+      <div class:list={[
+        'px-4 py-3.5 rounded-2xl text-sm font-medium border flex items-center gap-2.5',
+        flash.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800',
+      ]}>
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d={flash.type === 'success' ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+        </svg>
+        <span>{flash.text}</span>
+      </div>
+    )}
+
+    <form method="POST" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-7">
+      <div class="border-b border-slate-100 pb-4">
+        <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+          <span class="text-primary-600">🏢</span> Identitas & Kontak Utama
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">Informasi ini tampil di Header, Footer, dan tombol pemesanan WhatsApp.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div>
+          <label for="site_title" class={label}>Nama Website / Brand <span class="text-rose-500">*</span></label>
+          <input id="site_title" name="site_title" type="text" required value={settings.site_title || 'Beyond Jogja Tours'} class={input} />
+        </div>
+
+        <div>
+          <label for="whatsapp_number" class={label}>Nomor WhatsApp CS (Gunakan 62) <span class="text-rose-500">*</span></label>
+          <div class="flex rounded-xl border border-slate-300 overflow-hidden focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 transition shadow-sm bg-white">
+            <span class="px-3.5 flex items-center bg-slate-50 text-slate-400 text-xs font-mono border-r border-slate-300">WA:</span>
+            <input id="whatsapp_number" name="whatsapp_number" type="text" required placeholder="628123456789" value={settings.whatsapp_number || '6285213814714'} class="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent" />
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Format: 628xxxxxxxx (Gunakan 62 di depan, bukan 08)</p>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div>
+          <label for="phone_number" class={label}>Nomor Telepon Tampilan</label>
+          <input id="phone_number" name="phone_number" type="text" placeholder="+62 852-1381-4714" value={settings.phone_number || '+6285213814714'} class={input} />
+        </div>
+
+        <div>
+          <label for="email_address" class={label}>Alamat Email</label>
+          <input id="email_address" name="email_address" type="email" value={settings.email_address || 'beyondjogjajourneys@gmail.com'} class={input} />
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div>
+          <label for="instagram_url" class={label}>Link Instagram</label>
+          <input id="instagram_url" name="instagram_url" type="url" placeholder="https://www.instagram.com/..." value={settings.instagram_url || 'https://www.instagram.com/beyondjogja.tours/'} class={input} />
+        </div>
+
+        <div>
+          <label for="operating_hours" class={label}>Jam Operasional</label>
+          <input id="operating_hours" name="operating_hours" type="text" value={settings.operating_hours || 'Setiap Hari: 07:00 – 22:00 WIB'} class={input} />
+        </div>
+      </div>
+
+      <div>
+        <label for="office_address" class={label}>Alamat Lengkap Kantor</label>
+        <textarea id="office_address" name="office_address" rows="3" class={`${input} leading-relaxed`}>{settings.office_address || ''}</textarea>
+      </div>
+
+      <!-- SEO & Analitik Section -->
+      <div class="border-t border-slate-100 pt-6">
+        <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+          <span class="text-emerald-600">🔍</span> Pengaturan SEO & Google Analytics
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">Integrasikan website Anda dengan Google Search Console dan Google Analytics 4.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div>
+          <label for="google_analytics_id" class={label}>Google Analytics 4 Measurement ID</label>
+          <input id="google_analytics_id" name="google_analytics_id" type="text" placeholder="G-XXXXXXXXXX" value={settings.google_analytics_id || ''} class={input} />
+          <p class="text-[11px] text-slate-400 mt-1">Dapatkan dari Google Analytics (Admin &rarr; Data Streams &rarr; Measurement ID)</p>
+        </div>
+
+        <div>
+          <label for="google_site_verification" class={label}>Google Search Console Verification Code</label>
+          <input id="google_site_verification" name="google_site_verification" type="text" placeholder="google-site-verification code" value={settings.google_site_verification || ''} class={input} />
+          <p class="text-[11px] text-slate-400 mt-1">Tag verifikasi kepemilikan domain di Google Search Console</p>
+        </div>
+      </div>
+
+      <div>
+        <label for="canonical_site_url" class={label}>URL Domain Resmi (Canonical)</label>
+        <input id="canonical_site_url" name="canonical_site_url" type="url" placeholder="https://beyondjogjatours.com" value={settings.canonical_site_url || 'https://beyondjogjatours.com'} class={input} />
+        <p class="text-[11px] text-slate-400 mt-1">Digunakan untuk tag canonical, sitemap.xml, dan Open Graph preview</p>
+      </div>
+
+      <div class="flex items-center justify-end pt-4 border-t border-slate-100">
+        <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-xl transition shadow-md shadow-primary-600/20 text-sm cursor-pointer">
+          Simpan Pengaturan
+        </button>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+

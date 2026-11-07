@@ -1,73 +1,519 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
-import { getWhatsAppUrl } from '../../lib/constants';
+import { getTourBySlug } from '../../lib/tours';
+import { getSiteSettings, formatWhatsAppUrl } from '../../lib/settings';
 
-export async function getStaticPaths() {
-  const tours = await getCollection('tours');
-  return tours.map(tour => ({
-    params: { slug: tour.slug },
-    props: { tour },
-  }));
+const { slug } = Astro.params;
+const tour = await getTourBySlug(slug || '');
+const settings = await getSiteSettings();
+
+let waBookingUrl = '';
+let waCustomUrl = '';
+let images: string[] = [];
+let mainImage = '';
+let subImage1 = '';
+let subImage2 = '';
+let tourSchema: any = null;
+
+if (tour) {
+  const waBookingMessage = tour.data.whatsappMessage || `Halo Beyond Jogja Tours! Saya ingin tanya dan booking paket wisata: ${tour.data.title}`;
+  waBookingUrl = formatWhatsAppUrl(settings.whatsapp_number, waBookingMessage);
+  waCustomUrl = formatWhatsAppUrl(settings.whatsapp_number, `Halo Beyond Jogja Tours! Saya tertarik dengan ${tour.data.title}, tapi ingin konsultasi custom rute/destinasinya.`);
+
+  images = tour.data.gallery && tour.data.gallery.length > 0 ? tour.data.gallery : [tour.data.thumbnail];
+  mainImage = images[0];
+  subImage1 = images[1] || images[0];
+  subImage2 = images[2] || images[0];
+
+  tourSchema = {
+    "@context": "https://schema.org",
+    "@type": "TouristTrip",
+    "name": tour.data.title,
+    "description": tour.data.tagline || `Paket wisata private ${tour.data.title} di Yogyakarta.`,
+    "touristType": "Private Tour",
+    "offers": {
+      "@type": "Offer",
+      "price": (tour.data.price || '450000').replace(/\D/g, ''),
+      "priceCurrency": "IDR",
+      "availability": "https://schema.org/InStock"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": tour.data.rating || 4.9,
+      "reviewCount": tour.data.reviewsCount || 85
+    }
+  };
 }
-
-const { tour } = Astro.props;
-const { Content } = await tour.render();
 ---
 
-<BaseLayout title={tour.data.title} description={tour.data.tagline}>
-  <!-- Hero Detail -->
-  <section class="relative bg-gray-900 text-white pt-40 pb-24 md:pt-48 md:pb-32 flex items-center">
-    <div class="absolute inset-0 z-0">
-      <img 
-        src={tour.data.thumbnail} 
-        alt={tour.data.title} 
-        class="w-full h-full object-cover opacity-40"
-      />
-    </div>
-    <div class="container mx-auto px-4 relative z-10 text-center">
-      <h1 class="text-4xl md:text-5xl font-bold mb-4">{tour.data.title}</h1>
-      <p class="text-xl max-w-2xl mx-auto">{tour.data.tagline}</p>
-    </div>
-  </section>
-
-  <!-- Content Detail -->
-  <section class="py-16 bg-white min-h-screen">
-    <div class="container mx-auto px-4 max-w-4xl">
-      <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-8 md:p-12 -mt-24 relative z-20">
-        <div class="prose prose-lg max-w-none text-gray-700">
-          <Content />
-        </div>
+{tour ? (
+  <BaseLayout 
+    title={`${tour.data.title} - Beyond Jogja Tours`} 
+    description={tour.data.tagline || `Paket wisata private ${tour.data.title} di Yogyakarta. Lengkap mobil, driver ramah, BBM, dan jadwal fleksibel.`}
+    image={tour.data.thumbnail}
+    type="article"
+    schema={tourSchema}
+  >
+    <!-- Breadcrumb & Top Bar -->
+    <section class="bg-navy-950 text-white pt-28 pb-8 md:pt-36 md:pb-10 border-b border-white/10">
+      <div class="container mx-auto px-4 max-w-7xl">
         
-        <div class="mt-12 pt-8 border-t border-gray-100 text-center flex flex-col items-center">
-          <h3 class="text-2xl font-bold text-gray-900 mb-6">Tertarik dengan Paket Tour Ini?</h3>
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a 
-              href={getWhatsAppUrl(tour.data.whatsappMessage)}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-block bg-primary-600 text-white px-8 py-3.5 rounded-lg font-bold text-base hover:bg-primary-700 transition-colors shadow-md"
-            >
-              Contact Us Now via WhatsApp
-            </a>
-            {(tour.slug.toLowerCase().includes('borobudur') || tour.slug.toLowerCase().includes('prambanan')) && (
-              <a
-                href="https://www.getyourguide.com/yogyakarta-l349/borobudur-sunrise-prambanan-sunset-its-hidden-temples-t1505636/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="transition-transform duration-200 hover:scale-[1.03] inline-block shadow-sm rounded-lg overflow-hidden"
-              >
-                <div style="position: relative; width: fit-content">
-                  <img src="https://gyg.me/pQw3KK9K" width="170px" height="auto" style="border: 1px solid #c6c8d0" class="rounded-lg" alt="GetYourGuide | Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples"/>
-                  <p style="position: absolute; font-size: 0.52rem; font-weight: 500; color: #000000; font-family: Arial, sans-serif; z-index: 10; margin: 0 auto; right: 0.2rem; top: 0.2rem; width: 60%; line-height: 1.1;">
-                    Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples
-                  </p>
-                </div>
-              </a>
-            )}
+        <!-- Back Button -->
+        <div class="mb-5">
+          <button
+            type="button"
+            onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '/tour-package'; }"
+            class="inline-flex items-center gap-2 text-xs font-semibold text-slate-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 rounded-xl transition shadow-sm cursor-pointer group"
+            title="Kembali"
+          >
+            <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            <span>Kembali</span>
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 mb-3">
+          {tour.data.badge && (
+            <span class="bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+              {tour.data.badge}
+            </span>
+          )}
+          <span class="bg-white/10 text-slate-200 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5">
+            📍 {tour.data.location}
+          </span>
+          <span class="bg-white/10 text-slate-200 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5">
+            🚗 100% Private Tour
+          </span>
+        </div>
+
+        <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4">
+          {tour.data.title}
+        </h1>
+
+        <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300">
+          {tour.data.rating && tour.data.reviewsCount ? (
+            <div class="flex items-center gap-1.5 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-lg">
+              <span class="text-amber-400 font-bold">★ {tour.data.rating}</span>
+              <span class="text-slate-400">({tour.data.reviewsCount} ulasan tamu)</span>
+            </div>
+          ) : null}
+          <div class="flex items-center gap-1.5">
+            <span>⏱️ Durasi:</span>
+            <strong class="text-white">{tour.data.duration}</strong>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span>🏨 Penjemputan:</span>
+            <strong class="text-white">Hotel / Stasiun</strong>
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- Main Tour Details Content -->
+    <section class="py-8 md:py-12 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
+      <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- GYG Photo Gallery Mosaic -->
+        <div class="mb-10 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-navy-900">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 p-2">
+            <!-- Main Big Image -->
+            <div class="md:col-span-2 h-72 sm:h-96 md:h-[440px] rounded-xl overflow-hidden relative group">
+              <img 
+                src={mainImage} 
+                alt={tour.data.title} 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onerror="this.src='https://placehold.co/800x600?text=Foto+Wisata'"
+              />
+              <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                <span>📷 Destinasi Utama</span>
+              </div>
+            </div>
+
+            <!-- Stacked Side Images -->
+            <div class="hidden md:flex flex-col gap-2 h-[440px]">
+              <div class="h-1/2 rounded-xl overflow-hidden relative group">
+                <img 
+                  src={subImage1} 
+                  alt={`${tour.data.title} galeri 1`} 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  onerror="this.src='https://placehold.co/600x400?text=Foto+2'"
+                />
+              </div>
+              <div class="h-1/2 rounded-xl overflow-hidden relative group">
+                <img 
+                  src={subImage2} 
+                  alt={`${tour.data.title} galeri 2`} 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  onerror="this.src='https://placehold.co/600x400?text=Foto+3'"
+                />
+                <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+                  <span class="bg-black/75 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
+                    Lihat {images.length} Foto
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column Content Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          
+          <!-- LEFT COLUMN: Tour Information (65%) -->
+          <div class="lg:col-span-2 space-y-10">
+            
+            <!-- Activity Overview Grid (About this activity) -->
+            <div class="bg-white dark:bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm">
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="text-primary-600">ℹ️</span> Tentang Aktivitas Wisata Ini
+              </h2>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="flex items-start gap-3.5">
+                  <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0 text-lg">
+                    ⏱️
+                  </div>
+                  <div>
+                    <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Durasi Tour</h4>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">{tour.data.duration}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Waktu fleksibel mengikuti kenyamanan Anda</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3.5">
+                  <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0 text-lg">
+                    🚗
+                  </div>
+                  <div>
+                    <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Grup Privat (100% Private)</h4>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">Hanya Anda & Rombongan</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Tidak digabung dengan tamu lain</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3.5">
+                  <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0 text-lg">
+                    🏨
+                  </div>
+                  <div>
+                    <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Layanan Antar-Jemput</h4>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">Sudah Termasuk</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{tour.data.pickupLocation || 'Hotel, Stasiun Tugu/Lempuyangan, Bandara'}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3.5">
+                  <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0 text-lg">
+                    💬
+                  </div>
+                  <div>
+                    <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Driver & Pemandu</h4>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">Bahasa Indonesia / English</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Ramah, sopan, & siap ambilkan foto terbaik</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Highlights Section -->
+            {tour.data.highlights && tour.data.highlights.length > 0 && (
+              <div class="bg-white dark:bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-2">
+                  <span class="text-amber-500">✨</span> Daya Tarik & Keunggulan Paket Ini
+                </h2>
+                <ul class="space-y-3">
+                  {tour.data.highlights.map((hl) => (
+                    <li class="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">
+                      <span class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                        ✓
+                      </span>
+                      <span class="leading-relaxed">{hl}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <!-- Detailed Description -->
+            <div class="bg-white dark:bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm">
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="text-primary-600">📖</span> Deskripsi Lengkap Paket
+              </h2>
+              <div class="prose dark:prose-invert prose-slate max-w-none text-sm leading-relaxed" set:html={tour.htmlContent} />
+            </div>
+
+            <!-- Timeline Itinerary (GetYourGuide Timeline Style) -->
+            {tour.data.itinerary && tour.data.itinerary.length > 0 && (
+              <div class="bg-white dark:bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="text-primary-600">🗺️</span> Rencana Perjalanan (Itinerary)
+                  </h2>
+                  <span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-2.5 py-1 rounded-md">
+                    Jadwal Fleksibel
+                  </span>
+                </div>
+
+                <!-- Timeline List -->
+                <div class="relative pl-6 sm:pl-8 border-l-2 border-primary-200 dark:border-primary-500/30 space-y-8 ml-3">
+                  {tour.data.itinerary.map((step, idx) => (
+                    <div class="relative group">
+                      <!-- Dot Marker -->
+                      <div class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full border-2 border-primary-500 bg-white dark:bg-navy-900 group-hover:scale-125 transition-transform duration-200 shadow-sm"></div>
+
+                      <div class="space-y-1">
+                        <span class="inline-block text-xs font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10 px-2.5 py-0.5 rounded-full">
+                          {step.time}
+                        </span>
+                        <h4 class="text-base font-bold text-slate-900 dark:text-white mt-1">
+                          {step.title}
+                        </h4>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {step.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div class="mt-8 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200/60 dark:border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                  <span class="text-base shrink-0">💡</span>
+                  <p>
+                    <strong>Catatan:</strong> Susunan rute di atas bersifat fleksibel. Jika Anda ingin menambah destinasi, mampir mencicipi kuliner khas, atau berbelanja oleh-oleh, silakan komunikasikan dengan driver kami saat perjalanan.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <!-- Inclusions & Exclusions Checklist -->
+            <div class="bg-white dark:bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm">
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="text-primary-600">📋</span> Fasilitas Paket
+              </h2>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <!-- Included -->
+                <div class="space-y-3">
+                  <h4 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2 uppercase tracking-wider text-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Termasuk dalam Paket:
+                  </h4>
+                  <ul class="space-y-2.5">
+                    {tour.data.included.map((inc) => (
+                      <li class="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                        <span>{inc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <!-- Excluded -->
+                <div class="space-y-3">
+                  <h4 class="text-sm font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2 uppercase tracking-wider text-xs">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span> Tidak Termasuk:
+                  </h4>
+                  <ul class="space-y-2.5">
+                    {tour.data.excluded.map((exc) => (
+                      <li class="flex items-start gap-2.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        <span class="text-rose-500 font-bold shrink-0">✕</span>
+                        <span>{exc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Important Information & Tips -->
+            <div class="bg-white dark:bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm">
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="text-primary-600">🎒</span> Informasi Penting & Persiapan
+              </h2>
+              <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <strong class="text-slate-800 dark:text-slate-100 block mb-1">Yang Perlu Dibawa & Tips Persiapan:</strong>
+                  <p class="whitespace-pre-line">{tour.data.importantInfo || 'Pakaian yang nyaman dan menyerap keringat, kacamata hitam, topi/payung, kamera atau smartphone terisi penuh, serta uang tunai secukupnya untuk keperluan pribadi di lokasi wisata.'}</p>
+                </div>
+                <div>
+                  <strong class="text-slate-800 dark:text-slate-100 block mb-1">Konfirmasi Penjemputan:</strong>
+                  <p>Driver kami akan menghubungi Anda via WhatsApp H-1 sebelum keberangkatan untuk konfirmasi lokasi penjemputan dan nomor plat armada yang bertugas.</p>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+
+          <!-- RIGHT COLUMN: Sticky Booking & Inquiry Card (35%) -->
+          <div class="lg:col-span-1">
+            <div class="sticky top-28 space-y-6">
+              
+              <!-- Sticky Box Card -->
+              <div class="bg-white dark:bg-navy-900 rounded-2xl p-6 sm:p-7 border border-slate-200/90 dark:border-white/10 shadow-lg dark:shadow-2xl">
+                <!-- Price Header -->
+                <div class="border-b border-slate-100 dark:border-white/10 pb-5 mb-5">
+                  <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold block">Harga Paket Mulai Dari</span>
+                  <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                      {tour.data.price}
+                    </span>
+                    <span class="text-sm text-slate-500 dark:text-slate-400 font-normal">
+                      {tour.data.priceUnit}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {tour.data.priceNote || 'Harga per mobil (kapasitas 1-6 orang). Termasuk mobil ber-AC, driver ramah, & BBM.'}
+                  </p>
+                </div>
+
+                <!-- Reassurance Points -->
+                <div class="space-y-2.5 mb-6 text-xs text-slate-600 dark:text-slate-300">
+                  {(tour.data.bookingPerks || [
+                    '100% Private Tour (Tanpa Campur Tamu Lain)',
+                    'Jadwal & Waktu Singgah Bebas Diatur',
+                    'Bisa Bayar DP Ringan / Bayar di Tempat',
+                    'Driver Ramah & Siap Bantu Ambilkan Foto'
+                  ]).map((perk: string) => (
+                    <div class="flex items-center gap-2">
+                      <span class="text-emerald-500 font-bold">✓</span>
+                      <span>{perk}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <!-- Big Primary WhatsApp Booking CTA -->
+                <div class="space-y-3">
+                  <a
+                    href={waBookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3.5 px-4 rounded-xl text-center transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 text-sm"
+                  >
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                    </svg>
+                    <span>Pesan Sekarang via WhatsApp</span>
+                  </a>
+
+                  <a
+                    href={waCustomUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-4 rounded-xl text-center transition text-xs flex items-center justify-center gap-2"
+                  >
+                    <span>💬 Konsultasi / Ubah Rute Ini</span>
+                  </a>
+                </div>
+
+                <!-- Fast Info Box -->
+                <div class="mt-6 pt-5 border-t border-slate-100 dark:border-white/10 text-center">
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Respon Cepat • CS Online Siap Melayani 24/7
+                  </p>
+                </div>
+              </div>
+
+              <!-- Helpful Custom Tour Box -->
+              <div class="bg-gradient-to-br from-primary-900/10 to-primary-600/10 rounded-2xl p-5 border border-primary-500/20 text-center">
+                <span class="text-2xl mb-1 block">💡</span>
+                <h4 class="font-bold text-slate-900 dark:text-white text-sm mb-1">Ingin Destinasi Lain?</h4>
+                <p class="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                  Kami bisa buatkan rute khusus sesuai keinginan dan durasi liburan Anda di Jogja.
+                </p>
+                <a
+                  href={formatWhatsAppUrl(settings.whatsapp_number, 'Halo Beyond Jogja! Saya ingin konsultasi rute wisata kustom untuk keluarga.')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  Chat Konsultasi Kustom &rarr;
+                </a>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Mobile Sticky Bottom Floating Bar -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-t border-slate-200 dark:border-white/10 p-3.5 sm:hidden shadow-2xl flex items-center justify-between gap-3">
+      <div>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-medium">Mulai dari</span>
+        <div class="flex items-baseline gap-1">
+          <span class="text-lg font-black text-slate-900 dark:text-white">
+            {tour.data.price}
+          </span>
+          <span class="text-[11px] text-slate-400">
+            {tour.data.priceUnit}
+          </span>
+        </div>
+      </div>
+
+      <a
+        href={waBookingUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs transition shadow flex items-center gap-1.5 shrink-0"
+      >
+        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+        </svg>
+        <span>Pesan via WA</span>
+      </a>
     </div>
-  </section>
-</BaseLayout>
+  </BaseLayout>
+) : (
+  <BaseLayout 
+    title="Paket Wisata Tidak Ditemukan - Beyond Jogja Tours" 
+    description="Halaman paket wisata yang Anda cari tidak ditemukan atau telah dipindahkan."
+  >
+    <!-- Not Found View dengan Tombol Back & Icon -->
+    <section class="bg-navy-950 text-white min-h-[75vh] pt-36 pb-24 flex items-center relative overflow-hidden">
+      <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px] z-0"></div>
+      <div class="absolute top-1/3 -right-20 w-80 h-80 rounded-full bg-primary-500/10 blur-3xl z-0"></div>
+      <div class="absolute bottom-10 left-10 w-72 h-72 rounded-full bg-primary-400/5 blur-3xl z-0"></div>
+
+      <div class="container mx-auto px-4 max-w-xl text-center relative z-10" data-aos="fade-up">
+        <span class="text-6xl mb-4 block animate-bounce">🧭</span>
+        
+        <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-300 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
+          Paket Tidak Ditemukan
+        </div>
+
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-white mb-3 tracking-tight">
+          Destinasi Tour Belum Tersedia
+        </h1>
+
+        <p class="text-slate-300 text-sm leading-relaxed mb-8 max-w-md mx-auto">
+          Halaman paket wisata dengan alamat <code class="bg-white/10 px-2.5 py-1 rounded-md text-primary-300 font-mono text-xs">{slug}</code> tidak ditemukan di katalog kami atau rute telah diperbarui.
+        </p>
+
+        <!-- Action Buttons (Back dengan icon) -->
+        <div class="flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = '/tour-package'; }"
+            class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow-sm group"
+          >
+            <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            <span>Kembali</span>
+          </button>
+
+          <a
+            href="/tour-package"
+            class="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow text-sm"
+          >
+            <span>Katalog Tour</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </BaseLayout>
+)}

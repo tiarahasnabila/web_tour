@@ -1,0 +1,137 @@
+---
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import TourForm from '../../../../components/admin/TourForm.astro';
+import { sql } from '../../../../lib/db';
+import { verifySessionToken } from '../../../../lib/auth';
+
+// Wajib login
+const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+const tourId = Number(Astro.params.id);
+if (isNaN(tourId)) {
+  return Astro.redirect('/admin/tours');
+}
+
+let tour: any = null;
+let errorMessage = '';
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const get = (k: string) => formData.get(k)?.toString().trim() || '';
+
+    const title = get('title');
+    const slug = get('slug').toLowerCase();
+    const thumbnail = get('thumbnail');
+    const tagline = get('tagline');
+    const whatsapp_message = get('whatsapp_message');
+    const content = get('content');
+    const price = get('price') || 'Rp 450.000';
+    const price_unit = get('price_unit') || '/ mobil';
+    const duration = get('duration') || '10-12 Jam';
+    const badge = get('badge') || 'Paling Populer';
+    const location = get('location') || 'Yogyakarta';
+    const price_note = get('price_note') || 'Harga per mobil (kapasitas 1-6 orang). Termasuk mobil ber-AC, driver ramah, & BBM.';
+    const pickup_location = get('pickup_location') || 'Hotel, Stasiun Tugu/Lempuyangan, Bandara';
+    const important_info = get('important_info') || 'Pakaian yang nyaman dan menyerap keringat, kacamata hitam, topi/payung, kamera atau smartphone terisi penuh, serta uang tunai secukupnya untuk keperluan pribadi di lokasi wisata.';
+
+    const ratingRaw = get('rating');
+    const reviewsRaw = get('reviews_count');
+    const rating = ratingRaw ? Number(ratingRaw) : null;
+    const reviews_count = reviewsRaw ? parseInt(reviewsRaw, 10) : null;
+
+    // Parse array inputs
+    const highlights = get('highlights').split('\n').map(s => s.trim()).filter(Boolean);
+    const included = get('included').split('\n').map(s => s.trim()).filter(Boolean);
+    const excluded = get('excluded').split('\n').map(s => s.trim()).filter(Boolean);
+    const gallery = get('gallery').split('\n').map(s => s.trim()).filter(Boolean);
+    const booking_perks = get('booking_perks').split('\n').map(s => s.trim()).filter(Boolean);
+
+    // Parse itinerary lines: time | title | desc
+    const itinerary = get('itinerary').split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+      const parts = line.split('|').map(p => p.trim());
+      return {
+        time: parts[0] || 'Fleksibel',
+        title: parts[1] || 'Kunjungan Destinasi',
+        desc: parts[2] || '',
+      };
+    });
+
+    tour = { 
+      id: tourId, title, slug, thumbnail, tagline, whatsapp_message, content,
+      price, price_unit, duration, badge, location,
+      price_note, pickup_location, important_info,
+      booking_perks,
+      rating, reviews_count,
+      highlights, included, excluded, gallery, itinerary
+    };
+
+    if (!title || !slug || !thumbnail) {
+      errorMessage = 'Judul, slug, dan thumbnail wajib diisi.';
+    } else {
+      const slugCheck = await sql`SELECT id FROM tours WHERE slug = ${slug} AND id != ${tourId} LIMIT 1;`;
+      if (slugCheck.length > 0) {
+        errorMessage = `Slug "${slug}" sudah dipakai paket lain.`;
+      } else {
+        await sql`
+          UPDATE tours
+          SET 
+            title = ${title},
+            slug = ${slug},
+            thumbnail = ${thumbnail},
+            tagline = ${tagline},
+            whatsapp_message = ${whatsapp_message},
+            content = ${content},
+            price = ${price},
+            price_unit = ${price_unit},
+            duration = ${duration},
+            badge = ${badge},
+            location = ${location},
+            price_note = ${price_note},
+            pickup_location = ${pickup_location},
+            important_info = ${important_info},
+            booking_perks = ${JSON.stringify(booking_perks)},
+            highlights = ${JSON.stringify(highlights)},
+            included = ${JSON.stringify(included)},
+            excluded = ${JSON.stringify(excluded)},
+            gallery = ${JSON.stringify(gallery)},
+            itinerary = ${JSON.stringify(itinerary)},
+            rating = ${rating},
+            reviews_count = ${reviews_count}
+          WHERE id = ${tourId};
+        `;
+        return Astro.redirect('/admin/tours?saved=1');
+      }
+    }
+  } catch (err: any) {
+    console.error('Update error:', err);
+    errorMessage = 'Terjadi kesalahan: ' + err.message;
+  }
+}
+
+if (!tour) {
+  const rows = await sql`SELECT * FROM tours WHERE id = ${tourId} LIMIT 1;`;
+  if (rows.length === 0) {
+    return Astro.redirect('/admin/tours');
+  }
+  tour = rows[0];
+}
+---
+
+<AdminLayout title="Edit Paket" active="tours">
+  <div class="space-y-6">
+    <div>
+      <a href="/admin/tours" class="text-sm text-slate-500 hover:text-slate-800">&larr; Kembali ke daftar</a>
+      <h1 class="text-2xl font-bold text-slate-900 mt-2">Edit Paket Wisata</h1>
+    </div>
+
+    {errorMessage && (
+      <div class="px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">{errorMessage}</div>
+    )}
+
+    <TourForm tour={tour} submitLabel="Simpan Perubahan" slugRequired />
+  </div>
+</AdminLayout>
