@@ -90,46 +90,49 @@ const displayName = admin.display_name || admin.username;
 const initials = displayName.split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
 const fmt = (d: any) => (d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-');
 
-const input = 'w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-sm';
-const label = 'block text-sm font-semibold text-slate-700 mb-1.5';
+const input =
+  'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-xs placeholder:text-slate-400 dark:placeholder:text-slate-500';
+const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5';
 const alertCls = (m: Msg) => [
-  'px-4 py-3 rounded-xl text-sm font-medium border flex items-center gap-2.5',
-  m?.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800',
+  'px-4 py-3 rounded-2xl text-sm font-medium border flex items-center gap-2.5 shadow-xs',
+  m?.type === 'success'
+    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300'
+    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-300',
 ];
 ---
 
 <AdminLayout title="Profil Saya" active="profile">
-  <div class="space-y-6 max-w-4xl pb-12">
-    <!-- Header dengan Tombol Back -->
+  <div class="space-y-6 max-w-4xl pb-16">
+    <!-- Header dengan Tombol Back ke /admin/users -->
     <div class="flex items-center gap-3.5">
       <a
-        href="/admin"
+        href="/admin/users"
         class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary-600 hover:border-primary-200 dark:hover:border-primary-500/30 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-xs hover:shadow-sm transition flex items-center justify-center shrink-0 group"
-        title="Kembali ke Dashboard"
-        aria-label="Kembali ke Dashboard"
+        title="Kembali ke Manajemen Akun Admin"
+        aria-label="Kembali ke Manajemen Akun Admin"
       >
         <svg class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
       </a>
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Profil & Akun</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Kelola foto profil, informasi admin, dan pengaturan keamanan login.</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Profil & Keamanan Akun</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Kelola foto profil, identitas admin, dan kata sandi login Anda.</p>
       </div>
     </div>
 
     {usingDefaultPassword && (
-      <div class="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-sm shadow-sm">
-        <svg class="w-5 h-5 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="flex items-center gap-3 px-4.5 py-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-sm shadow-xs">
+        <svg class="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" />
         </svg>
-        <span>Akun ini masih memakai <b>password bawaan</b>. Segera perbarui di bagian formulir keamanan di bawah.</span>
+        <span>Akun ini masih memakai <b>password bawaan</b>. Segera perbarui di formulir keamanan password di bawah.</span>
       </div>
     )}
 
     <!-- Kartu ringkas profil dengan Avatar -->
-    <section class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row sm:items-center gap-6">
-      <div class="relative w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 text-white text-3xl font-bold flex items-center justify-center shadow-lg shadow-primary-600/20 shrink-0 border-2 border-white ring-4 ring-slate-100">
+    <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row sm:items-center gap-6">
+      <div class="relative w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 text-white text-3xl font-bold flex items-center justify-center shadow-lg shadow-primary-600/20 shrink-0 border-2 border-white dark:border-slate-800 ring-4 ring-slate-100 dark:ring-slate-800/60">
         {admin.avatar_url ? (
           <img src={admin.avatar_url} alt={displayName} class="w-full h-full object-cover" />
         ) : (
@@ -138,34 +141,34 @@ const alertCls = (m: Msg) => [
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2.5 flex-wrap">
-          <p class="text-xl font-bold text-slate-900 truncate">{displayName}</p>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-200">
+          <p class="text-xl font-bold text-slate-900 dark:text-white truncate">{displayName}</p>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800/80">
             Administrator
           </span>
         </div>
-        <p class="text-sm text-slate-500 mt-0.5 font-mono">@{admin.username}</p>
-        <p class="text-xs text-slate-400 mt-2">
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-mono">@{admin.username}</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">
           Foto profil ditampilkan di header atas dan sidebar panel admin.
         </p>
       </div>
-      <div class="sm:border-l sm:border-slate-100 sm:pl-6 text-xs text-slate-500 space-y-1.5 shrink-0">
-        <div><span class="text-slate-400">Bergabung:</span> <b class="text-slate-700 font-semibold">{fmt(admin.created_at)}</b></div>
-        <div><span class="text-slate-400">Pembaruan:</span> <b class="text-slate-700 font-semibold">{fmt(admin.updated_at)}</b></div>
+      <div class="sm:border-l sm:border-slate-100 dark:sm:border-slate-800 sm:pl-6 text-xs text-slate-500 dark:text-slate-400 space-y-1.5 shrink-0">
+        <div><span class="text-slate-400 dark:text-slate-500">Bergabung:</span> <b class="text-slate-700 dark:text-slate-200 font-semibold">{fmt(admin.created_at)}</b></div>
+        <div><span class="text-slate-400 dark:text-slate-500">Pembaruan:</span> <b class="text-slate-700 dark:text-slate-200 font-semibold">{fmt(admin.updated_at)}</b></div>
       </div>
     </section>
 
     <div class="grid lg:grid-cols-2 gap-6">
       <!-- Form Informasi Akun & Upload Foto -->
-      <form method="POST" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-6 flex flex-col justify-between">
+      <form method="POST" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6 flex flex-col justify-between">
         <input type="hidden" name="_action" value="profile" />
         <input type="hidden" name="avatar_url" id="avatar_url_input" value={admin.avatar_url ?? ''} />
 
         <div class="space-y-5">
-          <div class="border-b border-slate-100 pb-4">
-            <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
-              <span class="text-primary-600">👤</span> Informasi Profil & Foto
+          <div class="border-b border-slate-100 dark:border-slate-800 pb-4">
+            <h2 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+              <span class="text-primary-600 dark:text-primary-400">👤</span> Informasi Profil & Foto
             </h2>
-            <p class="text-xs text-slate-400 mt-0.5">Unggah foto profil personal Anda atau ubah nama tampilan.</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Unggah foto profil personal Anda atau ubah nama tampilan.</p>
           </div>
 
           {profileMsg && (
@@ -180,8 +183,8 @@ const alertCls = (m: Msg) => [
           <!-- Upload Photo Section -->
           <div>
             <label class={label}>Foto Profil</label>
-            <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
-              <div class="relative w-16 h-16 rounded-2xl overflow-hidden bg-primary-600 text-white font-bold text-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700">
+              <div class="relative w-16 h-16 rounded-2xl overflow-hidden bg-primary-600 text-white font-bold text-xl flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm">
                 <img
                   id="avatar_preview_img"
                   src={admin.avatar_url || ''}
@@ -204,9 +207,9 @@ const alertCls = (m: Msg) => [
                   <button
                     type="button"
                     id="trigger_upload_btn"
-                    class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-300 transition shadow-sm cursor-pointer flex items-center gap-1.5"
+                    class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-300 dark:border-slate-600 transition shadow-xs cursor-pointer flex items-center gap-1.5"
                   >
-                    <svg class="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
                     <span>Pilih Foto</span>
@@ -215,14 +218,14 @@ const alertCls = (m: Msg) => [
                     type="button"
                     id="remove_avatar_btn"
                     class:list={[
-                      'px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold border border-rose-200 transition cursor-pointer',
+                      'px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold border border-rose-200 dark:border-rose-800/60 transition cursor-pointer',
                       !admin.avatar_url && 'hidden',
                     ]}
                   >
                     Hapus
                   </button>
                 </div>
-                <p class="text-[11px] text-slate-400 leading-tight">
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 leading-tight">
                   Format JPG, PNG, atau WebP. Otomatis dioptimalkan & disimpan ke cloud database.
                 </p>
               </div>
@@ -243,9 +246,9 @@ const alertCls = (m: Msg) => [
           </div>
 
           <div>
-            <label for="username" class={label}>Username Login <span class="text-red-500">*</span></label>
-            <div class="flex rounded-xl border border-slate-300 overflow-hidden focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 transition shadow-sm bg-white">
-              <span class="px-3.5 flex items-center bg-slate-50 text-slate-400 text-sm border-r border-slate-300 font-mono">@</span>
+            <label for="username" class={label}>Username Login <span class="text-rose-500">*</span></label>
+            <div class="flex rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 transition shadow-xs bg-white dark:bg-slate-800">
+              <span class="px-3.5 flex items-center bg-slate-50 dark:bg-slate-800/80 text-slate-400 dark:text-slate-400 text-sm border-r border-slate-300 dark:border-slate-700 font-mono">@</span>
               <input
                 id="username"
                 name="username"
@@ -256,17 +259,17 @@ const alertCls = (m: Msg) => [
                 pattern="[a-zA-Z0-9_.]+"
                 value={admin.username}
                 autocomplete="username"
-                class="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent"
+                class="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent text-slate-900 dark:text-white"
               />
             </div>
-            <p class="text-xs text-slate-400 mt-1">Digunakan untuk login (huruf kecil, angka, titik, underscore).</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Digunakan untuk login (huruf kecil, angka, titik, underscore).</p>
           </div>
         </div>
 
-        <div class="flex justify-end pt-4 border-t border-slate-100">
+        <div class="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
           <button
             type="submit"
-            class="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition shadow-md shadow-primary-600/20 cursor-pointer flex items-center gap-2"
+            class="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white text-sm font-semibold transition shadow-md shadow-primary-600/20 cursor-pointer flex items-center gap-2 active:scale-95"
           >
             <span>Simpan Perubahan</span>
           </button>
@@ -274,15 +277,15 @@ const alertCls = (m: Msg) => [
       </form>
 
       <!-- Form Keamanan Password -->
-      <form method="POST" class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-6 flex flex-col justify-between">
+      <form method="POST" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6 flex flex-col justify-between">
         <input type="hidden" name="_action" value="password" />
 
         <div class="space-y-5">
-          <div class="border-b border-slate-100 pb-4">
-            <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+          <div class="border-b border-slate-100 dark:border-slate-800 pb-4">
+            <h2 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
               <span class="text-amber-500">🔒</span> Keamanan Password
             </h2>
-            <p class="text-xs text-slate-400 mt-0.5">Perbarui password Anda secara berkala untuk menjaga keamanan akun.</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Perbarui password Anda secara berkala untuk menjaga keamanan akun.</p>
           </div>
 
           {passwordMsg && (
@@ -302,10 +305,10 @@ const alertCls = (m: Msg) => [
           <div>
             <label for="new_password" class={label}>Password Baru</label>
             <input id="new_password" name="new_password" type="password" required minlength="8" autocomplete="new-password" placeholder="Minimal 8 karakter" class={input} />
-            <div class="mt-2.5 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div class="mt-2.5 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
               <div id="pw-bar" class="h-full w-0 transition-all"></div>
             </div>
-            <p id="pw-hint" class="text-xs text-slate-400 mt-1.5">Minimal 8 karakter dengan kombinasi angka & simbol.</p>
+            <p id="pw-hint" class="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Minimal 8 karakter dengan kombinasi angka & simbol.</p>
           </div>
 
           <div>
@@ -314,16 +317,16 @@ const alertCls = (m: Msg) => [
             <p id="pw-match" class="text-xs mt-1.5 hidden"></p>
           </div>
 
-          <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
-            <input id="pw-show" type="checkbox" class="rounded border-slate-300 text-primary-600 focus:ring-primary-500/20" />
+          <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+            <input id="pw-show" type="checkbox" class="rounded border-slate-300 dark:border-slate-700 text-primary-600 focus:ring-primary-500/20" />
             <span>Tampilkan isi password</span>
           </label>
         </div>
 
-        <div class="flex justify-end pt-4 border-t border-slate-100">
+        <div class="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
           <button
             type="submit"
-            class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition shadow-md shadow-slate-900/10 cursor-pointer"
+            class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-700 text-white text-sm font-semibold transition shadow-md shadow-slate-900/10 cursor-pointer active:scale-95"
           >
             Perbarui Password
           </button>
