@@ -76,18 +76,18 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
   <!-- Left Column: Primary Data (2 Cols) -->
   <div class="lg:col-span-2 space-y-6">
     <!-- Auto-Translate Tool Banner -->
-    <div class="bg-gradient-to-r from-primary-50 via-emerald-50 to-amber-50 border border-primary-200/80 rounded-3xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="admin-translate-banner bg-gradient-to-r from-primary-50 via-emerald-50 to-amber-50 dark:from-navy-900 dark:via-navy-900 dark:to-navy-950 border border-primary-200/80 dark:border-primary-500/30 rounded-3xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
       <div class="flex items-start gap-3.5">
-        <div class="w-10 h-10 rounded-2xl bg-primary-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+        <div class="w-10 h-10 rounded-2xl bg-primary-600 dark:bg-primary-500 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
           🌐
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h4 class="text-sm font-bold text-slate-900">Biasa Input Paket dalam Bahasa Inggris?</h4>
-            <span class="text-[10px] bg-primary-600 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Fitur Praktis</span>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">Biasa Input Paket dalam Bahasa Inggris?</h4>
+            <span class="text-[10px] bg-primary-600 dark:bg-primary-500 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Fitur Praktis</span>
           </div>
-          <p class="text-xs text-slate-600 mt-1 leading-relaxed max-w-xl">
-            Ketik semua judul, deskripsi, dan rute dalam Bahasa Inggris seperti biasa. Klik tombol di samping untuk <strong>otomatis menerjemahkannya ke Bahasa Indonesia yang rapi</strong> agar paket tampil sempurna di mode ID & ENG!
+          <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed max-w-xl">
+            Ketik semua judul, deskripsi, dan rute dalam Bahasa Inggris seperti biasa. Klik tombol di samping untuk <strong class="text-slate-900 dark:text-teal-300 font-bold">otomatis menerjemahkannya ke Bahasa Indonesia yang rapi</strong> agar paket tampil sempurna di mode ID & ENG!
           </p>
         </div>
       </div>
@@ -95,7 +95,7 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
         <button
           type="button"
           id="btn-auto-translate"
-          class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+          class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
         >
           <span id="translate-icon">✨</span>
           <span id="translate-btn-text">Terjemahkan ke Bahasa Indonesia</span>
@@ -103,7 +103,7 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
         <button
           type="button"
           id="btn-undo-translate"
-          class="hidden inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer"
+          class="hidden inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 dark:border dark:border-navy-700 font-bold text-xs transition cursor-pointer"
           title="Kembalikan teks bahasa Inggris asli"
         >
           <span>↺</span>
@@ -113,9 +113,9 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
     </div>
 
     <!-- Status Sukses Translate -->
-    <div id="translate-success-box" class="hidden px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between">
+    <div id="translate-success-box" class="hidden px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800/80 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between">
       <span>🎉 Teks paket berhasil diterjemahkan ke Bahasa Indonesia! Anda masih bisa mengeditnya sebelum klik tombol Simpan di bawah.</span>
-      <button type="button" id="close-success-box" class="text-emerald-600 hover:text-emerald-900 font-bold ml-2 text-sm">&times;</button>
+      <button type="button" id="close-success-box" class="text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-200 font-bold ml-2 text-sm">&times;</button>
     </div>
 
     <!-- Main Info Section -->
@@ -726,3 +726,24 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
     });
   })();
 </script>
+
+<style>
+  :global(html.dark) .admin-translate-banner {
+    background-image: linear-gradient(to right, #0f172a, #1e293b, #0f172a) !important;
+    border-color: rgba(20, 184, 166, 0.3) !important;
+  }
+  :global(html.dark) .admin-translate-banner h4 {
+    color: #ffffff !important;
+  }
+  :global(html.dark) .admin-translate-banner p {
+    color: #cbd5e1 !important;
+  }
+  :global(html.dark) .admin-translate-banner strong {
+    color: #5eead4 !important;
+  }
+  :global(html.dark) #translate-success-box {
+    background-color: rgba(6, 78, 59, 0.4) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    color: #a7f3d0 !important;
+  }
+</style>
