@@ -23,7 +23,7 @@ export interface SiteSettings {
 }
 
 let cachedSettings: { data: SiteSettings; expires: number } | null = null;
-const SETTINGS_CACHE_TTL = 60 * 1000; // 60 seconds in-memory cache
+const SETTINGS_CACHE_TTL = 10 * 1000; // 10 seconds cache to keep pages snappy without stale data
 
 export function invalidateSettingsCache() {
   cachedSettings = null;

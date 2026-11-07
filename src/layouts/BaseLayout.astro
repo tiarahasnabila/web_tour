@@ -36,6 +36,9 @@ let ogImage = `${siteUrl}/logo.png`;
 if (image) {
   ogImage = image.startsWith('http') ? image : `${siteUrl}${image.startsWith('/') ? '' : '/'}${image}`;
 }
+
+// Pastikan halaman publik selalu merespons dengan konten fresh tanpa cache browser usang
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
 ---
 
 <!doctype html>
@@ -129,6 +132,31 @@ if (image) {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
     <ViewTransitions />
+
+    <!-- Auto Refresh Public Website When Admin Updates Data -->
+    <script is:inline>
+      if (typeof window !== 'undefined') {
+        window.__beyondjogja_loaded_at = Date.now();
+
+        // 1. Cross-tab instant auto refresh
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'beyondjogja_data_updated') {
+            window.location.reload();
+          }
+        });
+
+        // 2. Auto refresh when switching back to this tab if data was updated while in background
+        window.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            const lastUpdated = localStorage.getItem('beyondjogja_data_updated');
+            if (lastUpdated && Number(lastUpdated) > (window.__beyondjogja_loaded_at || 0)) {
+              window.__beyondjogja_loaded_at = Date.now();
+              window.location.reload();
+            }
+          }
+        });
+      }
+    </script>
     
     <!-- Dark Mode Init -->
     <script is:inline>

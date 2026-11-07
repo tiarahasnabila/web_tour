@@ -503,6 +503,22 @@ const nav = [
         localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
         syncThemeUI(isDark);
       });
+
+      // Siarkan sinyal pembaruan data agar website publik langsung auto-refresh
+      function broadcastUpdate() {
+        try {
+          localStorage.setItem('beyondjogja_data_updated', Date.now().toString());
+        } catch {}
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('saved') || params.get('deleted') || params.get('success') || document.querySelector('.bg-emerald-50, .border-emerald-200')) {
+        broadcastUpdate();
+      }
+
+      document.addEventListener('submit', function() {
+        broadcastUpdate();
+      });
     })();
   </script>
 </body>
