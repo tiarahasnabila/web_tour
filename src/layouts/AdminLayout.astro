@@ -17,29 +17,16 @@ let displayName = username;
 let avatarUrl = '';
 let newInquiriesCount = 0;
 
-// Cache metadata admin di memori selama 15 detik agar navigasi sidebar instan
-let adminCache: Record<string, { displayName: string; avatarUrl: string; newInquiriesCount: number; expires: number }> =
-  (globalThis as any).__admin_meta_cache || {};
-(globalThis as any).__admin_meta_cache = adminCache;
-
-const cached = adminCache[username];
-if (cached && cached.expires > Date.now()) {
-  displayName = cached.displayName;
-  avatarUrl = cached.avatarUrl;
-  newInquiriesCount = cached.newInquiriesCount;
-} else {
-  try {
-    const [adminRows, inqRows] = await Promise.all([
-      sql`SELECT display_name, avatar_url FROM admins WHERE username = ${username} LIMIT 1;`,
-      sql`SELECT count(*) as count FROM inquiries WHERE status = 'baru';`,
-    ]);
-    if (adminRows[0]?.display_name) displayName = adminRows[0].display_name;
-    if (adminRows[0]?.avatar_url) avatarUrl = adminRows[0].avatar_url;
-    newInquiriesCount = Number(inqRows[0]?.count || 0);
-    adminCache[username] = { displayName, avatarUrl, newInquiriesCount, expires: Date.now() + 15000 };
-  } catch {
-    // fallback
-  }
+try {
+  const [adminRows, inqRows] = await Promise.all([
+    sql`SELECT display_name, avatar_url FROM admins WHERE username = ${username} LIMIT 1;`,
+    sql`SELECT count(*) as count FROM inquiries WHERE status = 'baru';`,
+  ]);
+  if (adminRows[0]?.display_name) displayName = adminRows[0].display_name;
+  if (adminRows[0]?.avatar_url) avatarUrl = adminRows[0].avatar_url;
+  newInquiriesCount = Number(inqRows[0]?.count || 0);
+} catch {
+  // fallback
 }
 const initials = displayName.split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
 
@@ -208,7 +195,7 @@ const nav = [
   <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-navy-950 text-slate-300 z-50 flex flex-col -translate-x-full lg:translate-x-0 overflow-hidden">
+  <aside id="sidebar" data-astro-prefetch="false" class="fixed inset-y-0 left-0 w-64 bg-navy-950 text-slate-300 z-50 flex flex-col -translate-x-full lg:translate-x-0 overflow-hidden">
     <div class="sb-brand h-16 px-4 sm:px-5 flex items-center gap-3.5 border-b border-white/[0.08] shrink-0 bg-white/[0.02]">
       <div class="relative shrink-0 flex items-center justify-center">
         <img
@@ -244,7 +231,6 @@ const nav = [
         <a
           href={item.href}
           title={item.label}
-          data-astro-prefetch="hover"
           class:list={[
             'sb-item flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition whitespace-nowrap',
             active === item.key
@@ -277,7 +263,6 @@ const nav = [
       <a
         href="/admin/profil"
         title="Edit profil"
-        data-astro-prefetch="hover"
         class:list={[
           'sb-item group flex items-center gap-3 px-2 py-2 rounded-xl transition',
           active === 'profile' ? 'bg-primary-600/15 ring-1 ring-primary-500/20' : 'hover:bg-white/5',
@@ -350,7 +335,7 @@ const nav = [
           <span id="theme-toggle-text" class="hidden sm:inline">Mode Gelap</span>
         </button>
 
-        <a href="/admin/profil" data-astro-prefetch="hover" class="flex items-center gap-2.5 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition group" title="Profil Admin">
+        <a href="/admin/profil" class="flex items-center gap-2.5 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition group" title="Profil Admin">
           <div class="w-8 h-8 rounded-full overflow-hidden bg-primary-50 dark:bg-primary-900/50 border border-slate-200 dark:border-slate-700 text-primary-600 dark:text-primary-300 flex items-center justify-center font-bold text-xs shrink-0">
             {avatarUrl ? (
               <img src={avatarUrl} alt={displayName} class="w-full h-full object-cover" />
