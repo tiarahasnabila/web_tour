@@ -100,7 +100,12 @@ const { isMobile = false } = Astro.props;
         document.cookie = `googtrans=/id/id; path=/;`;
       }
 
-      // Cari elemen combo Google Translate untuk langsung menerjemahkan di halaman aktif
+      if (isUserClick) {
+        window.location.reload();
+        return;
+      }
+
+      // Cari elemen combo Google Translate jika tersedia
       let attempts = 0;
       const interval = setInterval(() => {
         attempts++;
@@ -109,14 +114,7 @@ const { isMobile = false } = Astro.props;
           clearInterval(interval);
           select.value = targetLang === 'en' ? 'en' : 'id';
           select.dispatchEvent(new Event('change'));
-
-          // Jika kembali ke bahasa asli (ID), reload singkat hanya jika dipicu klik langsung
-          if (targetLang === 'id' && isUserClick) {
-            setTimeout(() => {
-              window.location.reload();
-            }, 100);
-          }
-        } else if (attempts > 12) {
+        } else if (attempts > 10) {
           clearInterval(interval);
         }
       }, 50);
