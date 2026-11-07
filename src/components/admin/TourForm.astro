@@ -75,6 +75,49 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
 <form method="POST" class="grid lg:grid-cols-3 gap-8">
   <!-- Left Column: Primary Data (2 Cols) -->
   <div class="lg:col-span-2 space-y-6">
+    <!-- Auto-Translate Tool Banner -->
+    <div class="bg-gradient-to-r from-primary-50 via-emerald-50 to-amber-50 border border-primary-200/80 rounded-3xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-2xl bg-primary-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+          🌐
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h4 class="text-sm font-bold text-slate-900">Biasa Input Paket dalam Bahasa Inggris?</h4>
+            <span class="text-[10px] bg-primary-600 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Fitur Praktis</span>
+          </div>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed max-w-xl">
+            Ketik semua judul, deskripsi, dan rute dalam Bahasa Inggris seperti biasa. Klik tombol di samping untuk <strong>otomatis menerjemahkannya ke Bahasa Indonesia yang rapi</strong> agar paket tampil sempurna di mode ID & ENG!
+          </p>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+        <button
+          type="button"
+          id="btn-auto-translate"
+          class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+        >
+          <span id="translate-icon">✨</span>
+          <span id="translate-btn-text">Terjemahkan ke Bahasa Indonesia</span>
+        </button>
+        <button
+          type="button"
+          id="btn-undo-translate"
+          class="hidden inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer"
+          title="Kembalikan teks bahasa Inggris asli"
+        >
+          <span>↺</span>
+          <span>Batal</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Sukses Translate -->
+    <div id="translate-success-box" class="hidden px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between">
+      <span>🎉 Teks paket berhasil diterjemahkan ke Bahasa Indonesia! Anda masih bisa mengeditnya sebelum klik tombol Simpan di bawah.</span>
+      <button type="button" id="close-success-box" class="text-emerald-600 hover:text-emerald-900 font-bold ml-2 text-sm">&times;</button>
+    </div>
+
     <!-- Main Info Section -->
     <section class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-5">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -597,6 +640,89 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
         if (galleryBtnText) galleryBtnText.textContent = '📁 Upload Foto ke Galeri (Bisa Pilih Banyak)';
         galleryFileInput.value = '';
       }
+    });
+
+    // 5. Auto-Translate Tool (EN -> ID)
+    const btnAutoTranslate = document.getElementById('btn-auto-translate');
+    const btnUndoTranslate = document.getElementById('btn-undo-translate');
+    const translateBtnText = document.getElementById('translate-btn-text');
+    const translateIcon = document.getElementById('translate-icon');
+    const successBox = document.getElementById('translate-success-box');
+    const closeSuccessBox = document.getElementById('close-success-box');
+
+    let backupTexts = null;
+
+    closeSuccessBox?.addEventListener('click', () => {
+      successBox?.classList.add('hidden');
+    });
+
+    const fieldIds = [
+      'title', 'tagline', 'content', 'price_note',
+      'booking_perks', 'highlights', 'itinerary',
+      'included', 'excluded', 'important_info',
+      'pickup_location', 'driver_service_note', 'group_type_note'
+    ];
+
+    btnAutoTranslate?.addEventListener('click', async () => {
+      const inputs = fieldIds.map(id => document.getElementById(id)).filter(Boolean);
+      const textsToTranslate = inputs.map(el => el.value);
+
+      // Pastikan ada teks yang diisi
+      if (textsToTranslate.every(t => !t || !t.trim())) {
+        alert('Silakan isi judul atau deskripsi paket dalam Bahasa Inggris terlebih dahulu.');
+        return;
+      }
+
+      // Simpan backup untuk fitur undo
+      backupTexts = inputs.map(el => el.value);
+
+      // Tampilkan status loading
+      if (translateBtnText) translateBtnText.textContent = 'Sedang Menerjemahkan...';
+      if (translateIcon) translateIcon.textContent = '⏳';
+      btnAutoTranslate.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texts: textsToTranslate, targetLang: 'id' }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Gagal menerjemahkan');
+        }
+
+        // Terapkan hasil terjemahan ke form inputs
+        inputs.forEach((el, idx) => {
+          if (data.translatedTexts[idx]) {
+            el.value = data.translatedTexts[idx];
+          }
+        });
+
+        // Tampilkan box sukses dan tombol undo
+        successBox?.classList.remove('hidden');
+        btnUndoTranslate?.classList.remove('hidden');
+      } catch (err) {
+        alert('Gagal menerjemahkan: ' + err.message);
+      } finally {
+        if (translateBtnText) translateBtnText.textContent = 'Terjemahkan Ulang';
+        if (translateIcon) translateIcon.textContent = '✨';
+        btnAutoTranslate.disabled = false;
+      }
+    });
+
+    btnUndoTranslate?.addEventListener('click', () => {
+      if (!backupTexts) return;
+      const inputs = fieldIds.map(id => document.getElementById(id)).filter(Boolean);
+      inputs.forEach((el, idx) => {
+        if (backupTexts[idx] !== undefined) {
+          el.value = backupTexts[idx];
+        }
+      });
+      btnUndoTranslate.classList.add('hidden');
+      successBox?.classList.add('hidden');
+      if (translateBtnText) translateBtnText.textContent = 'Terjemahkan ke Bahasa Indonesia';
     });
   })();
 </script>
