@@ -32,3 +32,4 @@ if (fs.existsSync(vercelOutputDir)) {
 } else {
   console.log('[fix-vercel-runtime] .vercel/output directory not found, skipping.');
 }
+
