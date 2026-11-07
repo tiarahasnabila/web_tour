@@ -189,7 +189,7 @@ const nav = [
   <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-navy-950 text-slate-300 z-50 flex flex-col -translate-x-full lg:translate-x-0 overflow-hidden">
+  <aside id="sidebar" data-astro-prefetch="false" class="fixed inset-y-0 left-0 w-64 bg-navy-950 text-slate-300 z-50 flex flex-col -translate-x-full lg:translate-x-0 overflow-hidden">
     <div class="sb-brand h-18 py-3.5 px-4 sm:px-5 flex items-center gap-3.5 border-b border-white/[0.08] shrink-0 bg-white/[0.02]">
       <div class="relative shrink-0 flex items-center justify-center">
         <img
@@ -277,7 +277,13 @@ const nav = [
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.232-6.232a2.5 2.5 0 113.536 3.536L12.536 16.5H9V13z" />
         </svg>
       </a>
-      <a href="/admin/logout" title="Keluar" class="sb-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium bg-white/5 hover:bg-red-500/20 hover:text-red-300 transition whitespace-nowrap">
+      <a 
+        href="/admin/logout" 
+        data-astro-prefetch="false"
+        rel="nofollow"
+        title="Keluar" 
+        class="sb-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium bg-white/5 hover:bg-red-500/20 hover:text-red-300 transition whitespace-nowrap"
+      >
         <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
           <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>

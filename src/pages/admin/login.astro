@@ -21,10 +21,11 @@ if (Astro.request.method === 'POST') {
       const rows = await sql`SELECT id, username, password_hash FROM admins WHERE username = ${username} LIMIT 1;`;
 
       if (rows.length > 0 && bcrypt.compareSync(password, rows[0].password_hash)) {
+        const isHttps = Astro.url.protocol === 'https:' || Astro.request.headers.get('x-forwarded-proto') === 'https';
         Astro.cookies.set('admin_session', createSessionToken(rows[0].username), {
           path: '/',
           httpOnly: true,
-          secure: import.meta.env.PROD,
+          secure: isHttps,
           sameSite: 'lax',
           maxAge: 60 * 60 * 24 * 7,
         });

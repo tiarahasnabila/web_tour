@@ -3,7 +3,6 @@ import AdminLayout from '../../../../layouts/AdminLayout.astro';
 import TourForm from '../../../../components/admin/TourForm.astro';
 import { sql } from '../../../../lib/db';
 import { verifySessionToken } from '../../../../lib/auth';
-import { invalidateToursCache } from '../../../../lib/tours';
 
 // Wajib login
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
@@ -116,7 +115,6 @@ if (Astro.request.method === 'POST') {
             is_active = ${is_active}
           WHERE id = ${tourId};
         `;
-        invalidateToursCache();
         return Astro.redirect('/admin/tours?saved=1');
       }
     }

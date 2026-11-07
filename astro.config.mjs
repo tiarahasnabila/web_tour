@@ -9,8 +9,8 @@ export default defineConfig({
   output: 'server',
   adapter: vercel(),
   prefetch: {
-    prefetchAll: true,
-    defaultStrategy: 'viewport'
+    prefetchAll: false,
+    defaultStrategy: 'hover'
   },
   integrations: [tailwind()]
 });

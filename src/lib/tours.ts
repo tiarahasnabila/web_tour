@@ -90,18 +90,7 @@ function parseJsonArray<T>(val: any, fallback: T[]): T[] {
   }
 }
 
-let cachedTours: { data: TourItem[]; expires: number } | null = null;
-const TOURS_CACHE_TTL = 30 * 1000; // 30 seconds
-
-export function invalidateToursCache() {
-  cachedTours = null;
-}
-
 export async function getAllTours(): Promise<TourItem[]> {
-  if (cachedTours && cachedTours.expires > Date.now()) {
-    return cachedTours.data;
-  }
-
   try {
     const rows = await sql`
       SELECT 
@@ -163,8 +152,6 @@ export async function getAllTours(): Promise<TourItem[]> {
         created_at: r.created_at,
       };
     });
-    cachedTours = { data: result, expires: Date.now() + TOURS_CACHE_TTL };
-    return result;
   } catch (err) {
     console.error('Error fetching tours from Neon:', err);
     return [];

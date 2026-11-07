@@ -1,4 +1,14 @@
 ---
+// Abaikan request jika browser atau crawler hanya melakukan prefetch di latar belakang
+const purpose = Astro.request.headers.get('purpose') 
+  || Astro.request.headers.get('sec-purpose') 
+  || Astro.request.headers.get('x-moz')
+  || Astro.request.headers.get('x-purpose');
+
+if (purpose && purpose.toLowerCase().includes('prefetch')) {
+  return new Response(null, { status: 204 });
+}
+
 Astro.cookies.delete('admin_session', { path: '/' });
 return Astro.redirect('/admin/login');
 ---
