@@ -395,7 +395,7 @@ const featuredTours = tours.slice(0, 3);
 </BaseLayout>
 
 <script>
-  document.addEventListener('astro:page-load', () => {
+  function initHomePage() {
     // 1. Tour Detail Toggle
     document.querySelectorAll<HTMLButtonElement>('.home-detail-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -443,5 +443,11 @@ const featuredTours = tours.slice(0, 3);
     }, observerOptions);
     
     counters.forEach(counter => observer.observe(counter));
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHomePage);
+  } else {
+    initHomePage();
+  }
 </script>

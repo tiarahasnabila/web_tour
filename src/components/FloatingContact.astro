@@ -61,8 +61,7 @@ const funnyMessages = [
 </style>
 
 <script define:vars={{ funnyMessages }}>
-  // Ensure the script works after Astro View Transitions
-  document.addEventListener('astro:page-load', () => {
+  function initFloatingWA() {
     const bubble    = document.getElementById('speech-bubble');
     const bubbleTxt = document.getElementById('bubble-text');
     const waWrapper = document.getElementById('wa-wrapper');
@@ -95,13 +94,13 @@ const funnyMessages = [
     if (window.waCycleTimer) clearInterval(window.waCycleTimer);
     if (window.waHideTimer) clearTimeout(window.waHideTimer);
 
-    // Show after 2s on load
+    // Show after 1.5s on load
     setTimeout(() => {
       showBubble(funnyMessages[0]);
       window.waHideTimer = setTimeout(hideBubble, 3500);
       // Then cycle every 7s
       window.waCycleTimer = setInterval(cycleBubble, 7000);
-    }, 2000);
+    }, 1500);
 
     // Show on hover
     waWrapper.addEventListener('mouseenter', () => {
@@ -111,5 +110,11 @@ const funnyMessages = [
     waWrapper.addEventListener('mouseleave', () => {
       window.waHideTimer = setTimeout(hideBubble, 2000);
     });
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFloatingWA);
+  } else {
+    initFloatingWA();
+  }
 </script>

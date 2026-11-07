@@ -180,17 +180,24 @@ const OFFICE_ADDRESS = settings.office_address;
 </BaseLayout>
 
 <script define:vars={{ whatsappNumber: WHATSAPP_NUMBER }}>
-  document.addEventListener('astro:page-load', () => {
+  function initContactForm() {
     const form = document.getElementById('contact-form');
+    if (!form) return;
 
-    form?.addEventListener('submit', (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const name    = (document.getElementById('name') as HTMLInputElement)?.value.trim() || '';
-      const phone   = (document.getElementById('phone') as HTMLInputElement)?.value.trim() || '';
-      const service = (document.getElementById('service') as HTMLSelectElement)?.value || '';
-      const date    = (document.getElementById('date') as HTMLInputElement)?.value || '';
-      const message = (document.getElementById('message') as HTMLTextAreaElement)?.value.trim() || '';
+      const nameEl    = document.getElementById('name');
+      const phoneEl   = document.getElementById('phone');
+      const serviceEl = document.getElementById('service');
+      const dateEl    = document.getElementById('date');
+      const messageEl = document.getElementById('message');
+
+      const name    = nameEl ? nameEl.value.trim() : '';
+      const phone   = phoneEl ? phoneEl.value.trim() : '';
+      const service = serviceEl ? serviceEl.value : '';
+      const date    = dateEl ? dateEl.value : '';
+      const message = messageEl ? messageEl.value.trim() : '';
 
       // Simpan lead ke database secara background sebelum membuka WhatsApp
       fetch('/api/inquiries', {
@@ -214,5 +221,11 @@ const OFFICE_ADDRESS = settings.office_address;
 
       window.open(waUrl, '_blank');
     });
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initContactForm);
+  } else {
+    initContactForm();
+  }
 </script>
