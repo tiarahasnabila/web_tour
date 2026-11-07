@@ -79,7 +79,7 @@ const { isMobile = false } = Astro.props;
       });
     }
 
-    function applyGoogleTranslate(targetLang: 'id' | 'en') {
+    function applyGoogleTranslate(targetLang: 'id' | 'en', isUserClick = false) {
       const host = window.location.hostname;
       const parts = host.split('.');
       const rootDomain = parts.length > 2 ? '.' + parts.slice(-2).join('.') : host;
@@ -110,15 +110,14 @@ const { isMobile = false } = Astro.props;
           select.value = targetLang === 'en' ? 'en' : 'id';
           select.dispatchEvent(new Event('change'));
 
-          // Jika kembali ke bahasa asli (ID), reload singkat agar teks kembali 100% akurat
-          if (targetLang === 'id') {
+          // Jika kembali ke bahasa asli (ID), reload singkat hanya jika dipicu klik langsung
+          if (targetLang === 'id' && isUserClick) {
             setTimeout(() => {
               window.location.reload();
             }, 100);
           }
-        } else if (attempts > 8) {
+        } else if (attempts > 12) {
           clearInterval(interval);
-          window.location.reload();
         }
       }, 50);
     }
@@ -132,14 +131,18 @@ const { isMobile = false } = Astro.props;
         const current = getStoredLang();
         if (target !== current) {
           updatePillStyles(target);
-          applyGoogleTranslate(target);
+          applyGoogleTranslate(target, true);
         }
       };
     });
 
-    // Inisialisasi tampilan awal
+    // Inisialisasi tampilan awal & pastikan halaman yang baru dibuka ikut diterjemahkan
     const currentLang = getStoredLang();
     updatePillStyles(currentLang);
+
+    if (currentLang === 'en') {
+      applyGoogleTranslate('en');
+    }
   }
 
   if (document.readyState === 'loading') {
