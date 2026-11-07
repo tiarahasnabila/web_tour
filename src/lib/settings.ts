@@ -22,12 +22,23 @@ export interface SiteSettings {
   canonical_site_url?: string;
 }
 
+let cachedSettings: { data: SiteSettings; expires: number } | null = null;
+const SETTINGS_CACHE_TTL = 60 * 1000; // 60 seconds in-memory cache
+
+export function invalidateSettingsCache() {
+  cachedSettings = null;
+}
+
 export async function getSiteSettings(): Promise<SiteSettings> {
+  if (cachedSettings && cachedSettings.expires > Date.now()) {
+    return cachedSettings.data;
+  }
+
   try {
     const rows = await sql`SELECT * FROM site_settings WHERE id = 1 LIMIT 1;`;
     if (rows.length > 0) {
       const r = rows[0];
-      return {
+      const result: SiteSettings = {
         site_title: r.site_title || DEF_TITLE,
         site_description: r.site_description || DEF_DESC,
         phone_number: r.phone_number || DEF_PHONE,
@@ -40,6 +51,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         google_site_verification: r.google_site_verification || '',
         canonical_site_url: r.canonical_site_url || 'https://beyondjogjatours.com',
       };
+      cachedSettings = { data: result, expires: Date.now() + SETTINGS_CACHE_TTL };
+      return result;
     }
   } catch (err) {
     console.error('Error fetching site_settings from Neon:', err);

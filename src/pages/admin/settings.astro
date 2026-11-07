@@ -2,6 +2,7 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { sql } from '../../lib/db';
 import { verifySessionToken } from '../../lib/auth';
+import { invalidateSettingsCache } from '../../lib/settings';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -45,6 +46,7 @@ if (Astro.request.method === 'POST') {
             updated_at = NOW()
         WHERE id = 1;
       `;
+      invalidateSettingsCache();
       flash = { type: 'success', text: 'Pengaturan kontak, SEO & analitik berhasil disimpan!' };
     }
   } catch (err: any) {

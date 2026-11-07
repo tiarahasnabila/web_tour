@@ -45,7 +45,7 @@ const navLinks = [
           <ul class="flex gap-6">
             {navLinks.map(link => (
               <li>
-                <a href={link.href} class="text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-[13px] tracking-wide transition-colors duration-200 relative group">
+                <a href={link.href} data-astro-prefetch class="text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-[13px] tracking-wide transition-colors duration-200 relative group">
                   {link.name}
                   <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-primary-500 rounded-full transition-all duration-300 group-hover:w-full"></span>
                 </a>
@@ -113,7 +113,7 @@ const navLinks = [
         <ul class="flex flex-col gap-3">
           {navLinks.map(link => (
             <li>
-              <a href={link.href} class="block text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium py-1.5 transition-colors">
+              <a href={link.href} data-astro-prefetch class="block text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium py-1.5 transition-colors">
                 {link.name}
               </a>
             </li>
@@ -138,29 +138,37 @@ const navLinks = [
   let isScrollListenerAdded = false;
 
   const initHeader = () => {
-    const navbar   = document.getElementById('navbar');
-    const btn      = document.getElementById('mobile-menu-btn');
-    const menu     = document.getElementById('mobile-menu');
-    const iconOpen = document.getElementById('icon-open');
-    const iconClose= document.getElementById('icon-close');
+    const navbar    = document.getElementById('navbar');
+    const btn       = document.getElementById('mobile-menu-btn');
+    const menu      = document.getElementById('mobile-menu');
+    const iconOpen  = document.getElementById('icon-open');
+    const iconClose = document.getElementById('icon-close');
 
-    // Remove old listeners by replacing the element (quickest way to ensure no duplicates if needed, but not strictly necessary if Astro removes the old elements anyway. The DOM elements are fresh on page-load).
     if (btn && menu) {
-      btn.addEventListener('click', () => {
-        const hidden = menu.classList.contains('hidden');
-        menu.classList.toggle('hidden', !hidden);
-        iconOpen?.classList.toggle('hidden',  hidden);
-        iconClose?.classList.toggle('hidden', !hidden);
-        
-        // Fix border radius when expanded so it doesn't clip into a pill shape
-        navbar?.classList.toggle('rounded-full', !hidden);
-        navbar?.classList.toggle('rounded-2xl', hidden);
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', !isHidden);
+        iconOpen?.classList.toggle('hidden', isHidden);
+        iconClose?.classList.toggle('hidden', !isHidden);
+        navbar?.classList.toggle('rounded-full', !isHidden);
+        navbar?.classList.toggle('rounded-2xl', isHidden);
+      };
+
+      // Close menu immediately when clicking any navigation link
+      menu.querySelectorAll('a').forEach((link) => {
+        link.onclick = () => {
+          menu.classList.add('hidden');
+          iconOpen?.classList.remove('hidden');
+          iconClose?.classList.add('hidden');
+          navbar?.classList.add('rounded-full');
+          navbar?.classList.remove('rounded-2xl');
+        };
       });
     }
 
     // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-      // Need to re-fetch elements in case they changed
+    document.onclick = (e) => {
       const currentNavbar = document.getElementById('navbar');
       const currentMenu   = document.getElementById('mobile-menu');
       if (currentNavbar && currentMenu && !currentNavbar.contains(e.target as Node) && !currentMenu.classList.contains('hidden')) {
@@ -170,7 +178,7 @@ const navLinks = [
         currentNavbar.classList.add('rounded-full');
         currentNavbar.classList.remove('rounded-2xl');
       }
-    });
+    };
 
     const handleThemeToggle = () => {
       const isDark = document.documentElement.classList.contains('dark');
@@ -183,8 +191,8 @@ const navLinks = [
       }
     };
 
-    document.querySelectorAll('.theme-toggle').forEach(btn => {
-      btn.addEventListener('click', handleThemeToggle);
+    document.querySelectorAll('.theme-toggle').forEach((btn) => {
+      (btn as HTMLButtonElement).onclick = handleThemeToggle;
     });
 
     if (!isScrollListenerAdded) {
@@ -197,7 +205,7 @@ const navLinks = [
           currentNavbar?.classList.add('bg-white/75', 'dark:bg-navy-900/80', 'shadow-[0_4px_24px_rgba(0,0,0,0.06)]', 'border-slate-200/60');
           currentNavbar?.classList.remove('bg-white/92', 'dark:bg-navy-900/95', 'shadow-[0_4px_24px_rgba(0,0,0,0.10)]', 'border-slate-200/80', 'backdrop-blur-3xl');
         }
-      });
+      }, { passive: true });
       isScrollListenerAdded = true;
     }
   };

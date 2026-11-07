@@ -158,6 +158,33 @@ if (image) {
     </script>
   </head>
   <body class="font-sans antialiased text-slate-700 bg-slate-50 dark:bg-navy-950 dark:text-slate-200 flex flex-col min-h-screen transition-colors duration-300 tracking-[-0.01em]">
+    <!-- Top Progress Bar for View Transitions -->
+    <div id="nav-progress-bar" class="fixed top-0 left-0 h-[3px] w-0 bg-gradient-to-r from-primary-500 via-emerald-400 to-amber-400 z-[9999] opacity-0 transition-opacity duration-200 pointer-events-none"></div>
+
+    <script is:inline>
+      document.addEventListener('astro:before-preparation', () => {
+        const bar = document.getElementById('nav-progress-bar');
+        if (bar) {
+          bar.style.opacity = '1';
+          bar.style.width = '70%';
+          bar.style.transition = 'width 0.4s ease-out, opacity 0.2s';
+        }
+      });
+      document.addEventListener('astro:page-load', () => {
+        const bar = document.getElementById('nav-progress-bar');
+        if (bar) {
+          bar.style.width = '100%';
+          setTimeout(() => {
+            bar.style.opacity = '0';
+            setTimeout(() => {
+              bar.style.width = '0%';
+              bar.style.transition = 'none';
+            }, 250);
+          }, 150);
+        }
+      });
+    </script>
+
     <Header />
     <main class="flex-grow">
       <slot />

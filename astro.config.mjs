@@ -7,6 +7,15 @@ import vercel from '@astrojs/vercel/serverless';
 export default defineConfig({
   site: 'https://beyondjogjatours.com',
   output: 'server',
-  adapter: vercel(),
+  adapter: vercel({
+    isr: {
+      expiration: 60,
+      exclude: ['/admin', '/admin/*', '/api/*']
+    }
+  }),
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover'
+  },
   integrations: [tailwind()]
 });
