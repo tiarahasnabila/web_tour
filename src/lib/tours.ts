@@ -30,6 +30,10 @@ export interface TourItem {
     priceNote?: string;
     importantInfo?: string;
     pickupLocation?: string;
+    groupType?: string;
+    groupTypeNote?: string;
+    driverService?: string;
+    driverServiceNote?: string;
     bookingPerks?: string[];
   };
   content: string;
@@ -100,6 +104,10 @@ export async function getAllTours(): Promise<TourItem[]> {
         COALESCE(price_note, 'Harga per mobil (kapasitas 1-6 orang). Termasuk mobil ber-AC, driver ramah, & BBM.') as price_note,
         COALESCE(important_info, 'Pakaian yang nyaman dan menyerap keringat, kacamata hitam, topi/payung, kamera atau smartphone terisi penuh, serta uang tunai secukupnya untuk keperluan pribadi di lokasi wisata.') as important_info,
         COALESCE(pickup_location, 'Hotel, Stasiun Tugu/Lempuyangan, Bandara') as pickup_location,
+        COALESCE(group_type, 'Hanya Anda & Rombongan') as group_type,
+        COALESCE(group_type_note, 'Tidak digabung dengan tamu lain') as group_type_note,
+        COALESCE(driver_service, 'Bahasa Indonesia / English') as driver_service,
+        COALESCE(driver_service_note, 'Ramah, sopan, & siap ambilkan foto terbaik') as driver_service_note,
         booking_perks,
         highlights, itinerary, included, excluded, gallery
       FROM tours 
@@ -130,6 +138,10 @@ export async function getAllTours(): Promise<TourItem[]> {
           priceNote: r.price_note,
           importantInfo: r.important_info,
           pickupLocation: r.pickup_location,
+          groupType: r.group_type,
+          groupTypeNote: r.group_type_note,
+          driverService: r.driver_service,
+          driverServiceNote: r.driver_service_note,
           bookingPerks: parseJsonArray<string>(r.booking_perks, defaultBookingPerks),
         },
         content: r.content,
@@ -158,6 +170,10 @@ export async function getTourBySlug(slug: string): Promise<TourItem | null> {
         COALESCE(price_note, 'Harga per mobil (kapasitas 1-6 orang). Termasuk mobil ber-AC, driver ramah, & BBM.') as price_note,
         COALESCE(important_info, 'Pakaian yang nyaman dan menyerap keringat, kacamata hitam, topi/payung, kamera atau smartphone terisi penuh, serta uang tunai secukupnya untuk keperluan pribadi di lokasi wisata.') as important_info,
         COALESCE(pickup_location, 'Hotel, Stasiun Tugu/Lempuyangan, Bandara') as pickup_location,
+        COALESCE(group_type, 'Hanya Anda & Rombongan') as group_type,
+        COALESCE(group_type_note, 'Tidak digabung dengan tamu lain') as group_type_note,
+        COALESCE(driver_service, 'Bahasa Indonesia / English') as driver_service,
+        COALESCE(driver_service_note, 'Ramah, sopan, & siap ambilkan foto terbaik') as driver_service_note,
         booking_perks,
         highlights, itinerary, included, excluded, gallery
       FROM tours 
@@ -191,6 +207,10 @@ export async function getTourBySlug(slug: string): Promise<TourItem | null> {
         priceNote: r.price_note,
         importantInfo: r.important_info,
         pickupLocation: r.pickup_location,
+        groupType: r.group_type,
+        groupTypeNote: r.group_type_note,
+        driverService: r.driver_service,
+        driverServiceNote: r.driver_service_note,
         bookingPerks: parseJsonArray<string>(r.booking_perks, defaultBookingPerks),
       },
       content: r.content,

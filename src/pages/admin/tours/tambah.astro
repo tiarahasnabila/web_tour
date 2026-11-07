@@ -31,6 +31,10 @@ if (Astro.request.method === 'POST') {
     const location = get('location') || 'Yogyakarta';
     const price_note = get('price_note') || 'Harga per mobil (kapasitas 1-6 orang). Termasuk mobil ber-AC, driver ramah, & BBM.';
     const pickup_location = get('pickup_location') || 'Hotel, Stasiun Tugu/Lempuyangan, Bandara';
+    const group_type = get('group_type') || 'Hanya Anda & Rombongan';
+    const group_type_note = get('group_type_note') || 'Tidak digabung dengan tamu lain';
+    const driver_service = get('driver_service') || 'Bahasa Indonesia / English';
+    const driver_service_note = get('driver_service_note') || 'Ramah, sopan, & siap ambilkan foto terbaik';
     const important_info = get('important_info') || 'Pakaian yang nyaman dan menyerap keringat, kacamata hitam, topi/payung, kamera atau smartphone terisi penuh, serta uang tunai secukupnya untuk keperluan pribadi di lokasi wisata.';
 
     const ratingRaw = get('rating');
@@ -59,6 +63,7 @@ if (Astro.request.method === 'POST') {
       title, slug, thumbnail, tagline, whatsapp_message, content,
       price, price_unit, duration, badge, location,
       price_note, pickup_location, important_info,
+      group_type, group_type_note, driver_service, driver_service_note,
       booking_perks,
       rating, reviews_count,
       highlights, included, excluded, gallery, itinerary
@@ -81,14 +86,16 @@ if (Astro.request.method === 'POST') {
             price, price_unit, duration, badge, location,
             price_note, pickup_location, important_info, booking_perks,
             highlights, included, excluded, gallery, itinerary,
-            rating, reviews_count
+            rating, reviews_count,
+            group_type, group_type_note, driver_service, driver_service_note
           )
           VALUES (
             ${title}, ${slug}, ${thumbnail}, ${tagline}, ${whatsapp_message}, ${content},
             ${price}, ${price_unit}, ${duration}, ${badge}, ${location},
             ${price_note}, ${pickup_location}, ${important_info}, ${JSON.stringify(booking_perks)},
             ${JSON.stringify(highlights)}, ${JSON.stringify(included)}, ${JSON.stringify(excluded)}, ${JSON.stringify(gallery)}, ${JSON.stringify(itinerary)},
-            ${rating}, ${reviews_count}
+            ${rating}, ${reviews_count},
+            ${group_type}, ${group_type_note}, ${driver_service}, ${driver_service_note}
           );
         `;
         return Astro.redirect('/admin/tours?saved=1');

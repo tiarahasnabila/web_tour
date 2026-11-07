@@ -129,11 +129,7 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
         <p class="text-[11px] text-slate-400 mt-1">Poin-poin garansi/keunggulan yang tampil dengan centang hijau pada kartu pemesanan samping.</p>
       </div>
 
-      <div class="grid sm:grid-cols-3 gap-4">
-        <div>
-          <label for="duration" class={label}>Durasi Tour</label>
-          <input id="duration" name="duration" type="text" value={tour.duration ?? '10-12 Jam'} placeholder="10-12 Jam" class={input} />
-        </div>
+      <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label for="badge" class={label}>Badge / Tag Populer</label>
           <input id="badge" name="badge" type="text" value={tour.badge ?? 'Paling Populer ⭐'} placeholder="Paling Populer ⭐" class={input} />
@@ -181,10 +177,49 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
         </div>
       </div>
 
-      <div>
-        <label for="pickup_location" class={label}>Area Penjemputan Termasuk</label>
-        <input id="pickup_location" name="pickup_location" type="text" value={tour.pickup_location ?? 'Hotel, Stasiun Tugu/Lempuyangan, Bandara'} placeholder="Hotel, Stasiun Tugu/Lempuyangan, Bandara" class={input} />
-        <p class="text-[11px] text-slate-400 mt-1">Muncul pada kartu aktivitas di bagian Layanan Antar-Jemput.</p>
+      <!-- Box Kartu Aktivitas Wisata (Tentang Aktivitas Wisata Ini) -->
+      <div class="p-5 rounded-2xl bg-sky-50/60 border border-sky-100 dark:bg-navy-950 dark:border-white/10 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-sky-200/60 dark:border-white/10">
+          <div class="flex items-center gap-2">
+            <span class="text-base">ℹ️</span>
+            <div>
+              <h4 class="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-100">Bagian "Tentang Aktivitas Wisata Ini"</h4>
+              <p class="text-[11px] text-slate-400">4 kartu ringkasan aktivitas yang tampil di bawah galeri foto halaman detail.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 pt-1">
+          <!-- Kartu 1: Durasi -->
+          <div>
+            <label for="duration" class={label}>⏱️ Durasi Tour</label>
+            <input id="duration" name="duration" type="text" value={tour.duration ?? '10-12 Jam'} placeholder="Contoh: 8 Jam atau 10-12 Jam" class={input} />
+            <p class="text-[11px] text-slate-400 mt-1">Estimasi durasi waktu tour.</p>
+          </div>
+
+          <!-- Kartu 2: Penjemputan -->
+          <div>
+            <label for="pickup_location" class={label}>🏨 Area Penjemputan Termasuk</label>
+            <input id="pickup_location" name="pickup_location" type="text" value={tour.pickup_location ?? 'Hotel, Stasiun Tugu/Lempuyangan, Bandara'} placeholder="Hotel, Stasiun Tugu/Lempuyangan, Bandara" class={input} />
+            <p class="text-[11px] text-slate-400 mt-1">Titik penjemputan gratis dalam paket.</p>
+          </div>
+
+          <!-- Kartu 3: Grup Privat -->
+          <div>
+            <label for="group_type" class={label}>🚗 Keterangan Grup Wisata</label>
+            <input id="group_type" name="group_type" type="text" value={tour.group_type ?? 'Hanya Anda & Rombongan'} placeholder="Hanya Anda & Rombongan" class={input} />
+            <input id="group_type_note" name="group_type_note" type="text" value={tour.group_type_note ?? 'Tidak digabung dengan tamu lain'} placeholder="Catatan: Tidak digabung dengan tamu lain" class={`${input} mt-1.5 text-xs text-slate-500`} />
+            <p class="text-[11px] text-slate-400 mt-1">Judul & catatan bawah kartu grup wisata.</p>
+          </div>
+
+          <!-- Kartu 4: Driver & Pemandu -->
+          <div>
+            <label for="driver_service" class={label}>💬 Driver & Pemandu</label>
+            <input id="driver_service" name="driver_service" type="text" value={tour.driver_service ?? 'Bahasa Indonesia / English'} placeholder="Bahasa Indonesia / English" class={input} />
+            <input id="driver_service_note" name="driver_service_note" type="text" value={tour.driver_service_note ?? 'Ramah, sopan, & siap ambilkan foto terbaik'} placeholder="Catatan: Ramah, sopan, & siap ambilkan foto terbaik" class={`${input} mt-1.5 text-xs text-slate-500`} />
+            <p class="text-[11px] text-slate-400 mt-1">Bahasa driver & keterangan pelayanan.</p>
+          </div>
+        </div>
       </div>
 
       <div>

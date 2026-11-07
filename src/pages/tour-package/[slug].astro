@@ -186,9 +186,9 @@ if (tour) {
                     🚗
                   </div>
                   <div>
-                    <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Grup Privat (100% Private)</h4>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">Hanya Anda & Rombongan</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Tidak digabung dengan tamu lain</p>
+                    <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Grup Wisata (100% Private)</h4>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">{tour.data.groupType || 'Hanya Anda & Rombongan'}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{tour.data.groupTypeNote || 'Tidak digabung dengan tamu lain'}</p>
                   </div>
                 </div>
 
@@ -209,8 +209,8 @@ if (tour) {
                   </div>
                   <div>
                     <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400">Driver & Pemandu</h4>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">Bahasa Indonesia / English</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Ramah, sopan, & siap ambilkan foto terbaik</p>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">{tour.data.driverService || 'Bahasa Indonesia / English'}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{tour.data.driverServiceNote || 'Ramah, sopan, & siap ambilkan foto terbaik'}</p>
                   </div>
                 </div>
               </div>
