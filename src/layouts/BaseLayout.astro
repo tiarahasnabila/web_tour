@@ -184,6 +184,48 @@ Astro.response.headers.set('Cache-Control', 'public, max-age=0, must-revalidate'
       // Jalankan setelah navigasi halaman (View Transitions)
       document.addEventListener('astro:after-swap', setDarkMode);
     </script>
+
+    <!-- Clean Google Translate Engine -->
+    <div id="google_translate_element" style="display:none !important;" aria-hidden="true"></div>
+    <script is:inline>
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'id',
+          includedLanguages: 'id,en',
+          autoDisplay: false
+        }, 'google_translate_element');
+      }
+    </script>
+    <script is:inline src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style is:global>
+      /* Bersihkan elemen default Google Translate agar tidak menggeser navbar */
+      .goog-te-banner-frame.skiptranslate,
+      .goog-te-banner-frame,
+      iframe.goog-te-banner-frame {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+      }
+      body {
+        top: 0px !important;
+        position: static !important;
+      }
+      #goog-gt-tt, .goog-te-balloon-frame {
+        display: none !important;
+        visibility: hidden !important;
+      }
+      .goog-text-highlight {
+        background: none !important;
+        box-shadow: none !important;
+      }
+      #google_translate_element {
+        display: none !important;
+      }
+      .skiptranslate iframe {
+        display: none !important;
+      }
+    </style>
   </head>
   <body class="font-sans antialiased text-slate-700 bg-slate-50 dark:bg-navy-950 dark:text-slate-200 flex flex-col min-h-screen transition-colors duration-300 tracking-[-0.01em]">
     <!-- Top Progress Bar for View Transitions -->

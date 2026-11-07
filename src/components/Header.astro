@@ -1,5 +1,6 @@
 ---
 import { getWhatsAppUrl, PHONE_NUMBER } from '../lib/constants';
+import LanguageSwitcher from './LanguageSwitcher.astro';
 
 const navLinks = [
   { name: 'Home',         href: '/' },
@@ -38,7 +39,7 @@ const isLinkActive = (href: string) => {
       <div class="flex justify-between items-center">
 
         <!-- Logo -->
-        <a href="/" class="flex items-center gap-2.5 group">
+        <a href="/" class="flex items-center gap-2.5 group notranslate">
           <img src="/logo.png" alt="Beyond Jogja Tours" class="w-10 h-10 object-contain rounded-full shadow-sm ring-2 ring-slate-200 dark:ring-white/10" />
           <div class="leading-tight">
             <span class="block text-[15px] font-semibold text-slate-900 dark:text-white tracking-tight">Beyond Jogja</span>
@@ -84,6 +85,9 @@ const isLinkActive = (href: string) => {
           </div>
 
           <div class="flex items-center gap-3 border-r border-slate-200 dark:border-white/10 pr-4">
+            <!-- Language Switcher (Desktop) -->
+            <LanguageSwitcher />
+
             <!-- Desktop Theme Toggle -->
             <button class="theme-toggle p-2 text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full focus:outline-none transition-colors" aria-label="Toggle Dark Mode">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-sun hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,6 +109,9 @@ const isLinkActive = (href: string) => {
         </div>
 
         <div class="flex items-center gap-2 lg:hidden">
+          <!-- Mobile Language Switcher -->
+          <LanguageSwitcher isMobile={true} />
+
           <!-- Mobile Theme Toggle -->
           <button class="theme-toggle p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg focus:outline-none transition-colors" aria-label="Toggle Dark Mode">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 icon-sun hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
