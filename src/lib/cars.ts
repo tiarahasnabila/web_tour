@@ -20,7 +20,18 @@ export interface CarItem {
   created_at: string;
 }
 
+let cachedCars: { data: CarItem[]; expires: number } | null = null;
+const CARS_CACHE_TTL = 30 * 1000; // 30 seconds
+
+export function invalidateCarsCache() {
+  cachedCars = null;
+}
+
 export async function getAllCars(): Promise<CarItem[]> {
+  if (cachedCars && cachedCars.expires > Date.now()) {
+    return cachedCars.data;
+  }
+
   try {
     const rows = await sql`
       SELECT id, title, slug, thumbnail, features, whatsapp_message, content, created_at,
@@ -58,6 +69,8 @@ export async function getAllCars(): Promise<CarItem[]> {
         created_at: r.created_at,
       };
     });
+    cachedCars = { data: result, expires: Date.now() + CARS_CACHE_TTL };
+    return result;
   } catch (err) {
     console.error('Error fetching cars from Neon:', err);
     return [];

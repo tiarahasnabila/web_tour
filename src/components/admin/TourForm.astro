@@ -13,6 +13,7 @@ interface Props {
     duration?: string;
     badge?: string;
     location?: string;
+    is_active?: boolean;
     rating?: number;
     reviews_count?: number;
     highlights?: any;
@@ -319,8 +320,35 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
   <div class="space-y-6">
     <section class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm space-y-5 lg:sticky lg:top-24">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 class="font-bold text-slate-900 text-sm">Media & Publikasi</h3>
-        <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary-50 text-primary-700">Foto Utama</span>
+        <h3 class="font-bold text-slate-900 text-sm">Media & Status Paket</h3>
+        <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary-50 text-primary-700">Publikasi</span>
+      </div>
+
+      <!-- Status Paket: Aktif vs Nonaktif -->
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Status Tampil Paket</span>
+          <span id="status-badge" class:list={[
+            'text-[11px] font-bold px-2.5 py-0.5 rounded-full border',
+            tour.is_active !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+          ]}>
+            {tour.is_active !== false ? '🟢 Aktif (Live)' : '⚪ Nonaktif (Diperbarui)'}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border cursor-pointer transition text-xs font-semibold bg-white hover:bg-slate-50 border-slate-200 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/60 has-[:checked]:text-emerald-800">
+            <input type="radio" name="is_active" value="true" checked={tour.is_active !== false} class="sr-only status-radio" />
+            <span>Aktif (Tampil)</span>
+          </label>
+          <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border cursor-pointer transition text-xs font-semibold bg-white hover:bg-slate-50 border-slate-200 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/60 has-[:checked]:text-amber-800">
+            <input type="radio" name="is_active" value="false" checked={tour.is_active === false} class="sr-only status-radio" />
+            <span>Nonaktif (Tutup)</span>
+          </label>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Pilih <strong>Nonaktif</strong> jika paket sedang Anda perbarui. Pengunjung tidak akan dapat memesan atau melihat paket ini di katalog.
+        </p>
       </div>
 
       <!-- Live Thumbnail Preview Card -->
@@ -335,19 +363,74 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
           <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span class="text-xs font-medium">Masukkan URL gambar untuk melihat pratinjau</span>
+          <span class="text-xs font-medium">Upload foto atau masukkan link gambar</span>
         </div>
       </div>
 
-      <div>
-        <label for="thumbnail" class={label}>URL Foto Utama <span class="text-rose-500">*</span></label>
-        <input id="thumbnail" name="thumbnail" type="text" required value={tour.thumbnail ?? ''} placeholder="https://... atau /foto.jpg" class={input} />
+      <!-- Upload Foto Utama & Link Input -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <label for="thumbnail" class={label}>Foto Utama Paket <span class="text-rose-500">*</span></label>
+          <button
+            type="button"
+            id="clear_thumb_btn"
+            class:list={['text-xs text-rose-500 hover:text-rose-700 font-medium cursor-pointer', !tour.thumbnail && 'hidden']}
+          >
+            Hapus Foto
+          </button>
+        </div>
+
+        <!-- Tombol Upload File Komputer / HP -->
+        <input type="file" id="thumb_file_input" accept="image/*" class="hidden" />
+        <button
+          type="button"
+          id="thumb_upload_btn"
+          class="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-primary-300 dark:border-primary-500/40 bg-primary-50/60 dark:bg-primary-500/10 hover:bg-primary-100/70 text-primary-700 dark:text-primary-300 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span id="thumb_btn_text">📁 Upload Foto dari Komputer / HP</span>
+        </button>
+
+        <div>
+          <input
+            id="thumbnail"
+            name="thumbnail"
+            type="text"
+            required
+            value={tour.thumbnail ?? ''}
+            placeholder="Atau tempel link gambar (https://...)"
+            class={input}
+          />
+          <p class="text-[11px] text-slate-400 mt-1">Bisa langsung upload file foto atau tempel URL link gambar.</p>
+        </div>
       </div>
 
-      <div class="pt-4 border-t border-slate-100">
-        <label for="gallery" class={label}>Galeri Foto Tambahan (1 URL per baris)</label>
-        <textarea id="gallery" name="gallery" rows="4" placeholder={'https://images.unsplash.com/...\nhttps://images.unsplash.com/...'} class={`${input} font-mono text-xs`}>{galleryText}</textarea>
-        <p class="text-[11px] text-slate-400 mt-1">Muncul sebagai galeri mosaic foto di halaman tour.</p>
+      <!-- Upload Galeri Foto Tambahan -->
+      <div class="pt-4 border-t border-slate-100 space-y-3">
+        <label for="gallery" class={label}>Galeri Foto Tambahan (Mosaic)</label>
+
+        <input type="file" id="gallery_file_input" accept="image/*" multiple class="hidden" />
+        <button
+          type="button"
+          id="gallery_upload_btn"
+          class="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span id="gallery_btn_text">📁 Upload Foto ke Galeri (Bisa Pilih Banyak)</span>
+        </button>
+
+        <textarea
+          id="gallery"
+          name="gallery"
+          rows="4"
+          placeholder={'https://images.unsplash.com/...\nhttps://images.unsplash.com/...'}
+          class={`${input} font-mono text-xs`}
+        >{galleryText}</textarea>
+        <p class="text-[11px] text-slate-400 mt-1">1 foto per baris. Hasil upload otomatis ditambahkan ke kolom ini.</p>
       </div>
 
       <!-- Action Buttons -->
@@ -367,32 +450,153 @@ const label = 'block text-xs font-bold uppercase tracking-wider text-slate-700 m
 </form>
 
 <script is:inline>
-  const urlInput = document.getElementById('thumbnail');
-  const img = document.getElementById('preview');
-  const empty = document.getElementById('preview-empty');
-  function update() {
-    const v = urlInput ? urlInput.value.trim() : '';
-    if (!v) {
-      if (img) img.classList.add('hidden');
-      if (empty) empty.classList.remove('hidden');
-      return;
-    }
-    if (img) img.src = v;
-  }
-  if (img) {
-    img.addEventListener('load', () => {
-      img.classList.remove('hidden');
-      if (empty) empty.classList.add('hidden');
+  (function() {
+    // 1. Status Toggle Visual Indicator
+    const statusRadios = document.querySelectorAll('.status-radio');
+    const statusBadge = document.getElementById('status-badge');
+    statusRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.checked) {
+          if (radio.value === 'true') {
+            statusBadge.textContent = '🟢 Aktif (Live)';
+            statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200';
+          } else {
+            statusBadge.textContent = '⚪ Nonaktif (Diperbarui)';
+            statusBadge.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200';
+          }
+        }
+      });
     });
-    img.addEventListener('error', () => {
-      img.classList.add('hidden');
-      if (empty) {
-        empty.classList.remove('hidden');
-        empty.innerHTML = '<span class="text-xs text-rose-500 font-medium">⚠️ Gambar tidak dapat dimuat dari URL ini</span>';
+
+    // 2. Helper Canvas Image Compressor
+    function compressImage(file, maxDim, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width;
+            let h = img.height;
+            if (w > h) {
+              if (w > maxDim) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              }
+            } else {
+              if (h > maxDim) {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // 3. Thumbnail Live Preview & Upload
+    const urlInput = document.getElementById('thumbnail');
+    const previewImg = document.getElementById('preview');
+    const emptyBox = document.getElementById('preview-empty');
+    const thumbUploadBtn = document.getElementById('thumb_upload_btn');
+    const thumbFileInput = document.getElementById('thumb_file_input');
+    const thumbBtnText = document.getElementById('thumb_btn_text');
+    const clearThumbBtn = document.getElementById('clear_thumb_btn');
+
+    function updatePreview(val) {
+      const v = (val !== undefined ? val : (urlInput ? urlInput.value : '')).trim();
+      if (!v) {
+        if (previewImg) previewImg.classList.add('hidden');
+        if (emptyBox) emptyBox.classList.remove('hidden');
+        if (clearThumbBtn) clearThumbBtn.classList.add('hidden');
+        return;
+      }
+      if (previewImg) previewImg.src = v;
+      if (clearThumbBtn) clearThumbBtn.classList.remove('hidden');
+    }
+
+    if (previewImg) {
+      previewImg.addEventListener('load', () => {
+        previewImg.classList.remove('hidden');
+        if (emptyBox) emptyBox.classList.add('hidden');
+      });
+      previewImg.addEventListener('error', () => {
+        previewImg.classList.add('hidden');
+        if (emptyBox) {
+          emptyBox.classList.remove('hidden');
+          emptyBox.innerHTML = '<span class="text-xs text-rose-500 font-medium">⚠️ Foto tidak dapat dimuat</span>';
+        }
+      });
+    }
+
+    urlInput?.addEventListener('input', () => updatePreview());
+
+    thumbUploadBtn?.addEventListener('click', () => {
+      thumbFileInput?.click();
+    });
+
+    thumbFileInput?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        alert('Silakan pilih file gambar (JPG, PNG, atau WebP).');
+        return;
+      }
+      if (thumbBtnText) thumbBtnText.textContent = '⏳ Mengompres & Memproses...';
+      try {
+        const compressedDataUrl = await compressImage(file, 1200, 0.85);
+        if (urlInput) urlInput.value = compressedDataUrl;
+        updatePreview(compressedDataUrl);
+      } catch (err) {
+        alert('Gagal memproses gambar: ' + err.message);
+      } finally {
+        if (thumbBtnText) thumbBtnText.textContent = '📁 Ganti Foto dari Komputer / HP';
+        thumbFileInput.value = '';
       }
     });
-  }
-  if (urlInput) {
-    urlInput.addEventListener('input', update);
-  }
+
+    clearThumbBtn?.addEventListener('click', () => {
+      if (urlInput) urlInput.value = '';
+      updatePreview('');
+    });
+
+    // 4. Gallery Upload Multiple Images
+    const galleryUploadBtn = document.getElementById('gallery_upload_btn');
+    const galleryFileInput = document.getElementById('gallery_file_input');
+    const galleryTextarea = document.getElementById('gallery');
+    const galleryBtnText = document.getElementById('gallery_btn_text');
+
+    galleryUploadBtn?.addEventListener('click', () => {
+      galleryFileInput?.click();
+    });
+
+    galleryFileInput?.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+      if (files.length === 0) return;
+
+      if (galleryBtnText) galleryBtnText.textContent = `⏳ Memproses ${files.length} foto...`;
+      try {
+        const results = await Promise.all(files.map(f => compressImage(f, 1200, 0.82)));
+        const currentLines = (galleryTextarea?.value || '').split('\n').map(s => s.trim()).filter(Boolean);
+        const combined = [...currentLines, ...results];
+        if (galleryTextarea) {
+          galleryTextarea.value = combined.join('\n');
+        }
+      } catch (err) {
+        alert('Gagal memproses foto galeri: ' + err.message);
+      } finally {
+        if (galleryBtnText) galleryBtnText.textContent = '📁 Upload Foto ke Galeri (Bisa Pilih Banyak)';
+        galleryFileInput.value = '';
+      }
+    });
+  })();
 </script>

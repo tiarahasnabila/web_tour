@@ -8,6 +8,12 @@ const navLinks = [
   { name: 'Tour Package', href: '/tour-package' },
   { name: 'Kontak',       href: '/kontak' },
 ];
+
+const currentPath = Astro.url.pathname;
+const isLinkActive = (href: string) => {
+  if (href === '/') return currentPath === '/';
+  return currentPath === href || currentPath.startsWith(href + '/');
+};
 ---
 
 <!-- Ticker Bar -->
@@ -43,14 +49,27 @@ const navLinks = [
         <!-- Desktop Nav -->
         <div class="hidden lg:flex items-center gap-8">
           <ul class="flex gap-6">
-            {navLinks.map(link => (
-              <li>
-                <a href={link.href} data-astro-prefetch class="text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-[13px] tracking-wide transition-colors duration-200 relative group">
-                  {link.name}
-                  <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-primary-500 rounded-full transition-all duration-300 group-hover:w-full"></span>
-                </a>
-              </li>
-            ))}
+            {navLinks.map(link => {
+              const active = isLinkActive(link.href);
+              return (
+                <li>
+                  <a 
+                    href={link.href} 
+                    data-astro-prefetch="load" 
+                    class={`font-medium text-[13px] tracking-wide transition-colors duration-200 relative group py-1 ${
+                      active 
+                        ? 'text-primary-600 dark:text-primary-400 font-semibold' 
+                        : 'text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {link.name}
+                    <span class={`absolute -bottom-1 left-0 h-[2px] bg-primary-500 rounded-full transition-all duration-300 ${
+                      active ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </a>
+                </li>
+              );
+            })}
           </ul>
 
           <!-- Open Hours Badge -->
@@ -110,20 +129,34 @@ const navLinks = [
 
       <!-- Mobile Nav -->
       <div id="mobile-menu" class="hidden lg:hidden mt-4 pb-4 border-t border-slate-100 dark:border-white/8 pt-4">
-        <ul class="flex flex-col gap-3">
-          {navLinks.map(link => (
-            <li>
-              <a href={link.href} data-astro-prefetch class="block text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium py-1.5 transition-colors">
-                {link.name}
-              </a>
-            </li>
-          ))}
+        <ul class="flex flex-col gap-2">
+          {navLinks.map(link => {
+            const active = isLinkActive(link.href);
+            return (
+              <li>
+                <a 
+                  href={link.href} 
+                  data-astro-prefetch="load" 
+                  class={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all active:scale-[0.98] ${
+                    active 
+                      ? 'bg-primary-500/10 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 font-bold border border-primary-500/20 shadow-xs' 
+                      : 'text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-100 dark:hover:bg-white/5 font-medium'
+                  }`}
+                >
+                  <span>{link.name}</span>
+                  {active && (
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary-500 dark:bg-primary-400"></span>
+                  )}
+                </a>
+              </li>
+            );
+          })}
           <li class="mt-3">
             <a
               href={getWhatsAppUrl("Halo, saya ingin bertanya tentang layanan Beyond Jogja Tours")}
               target="_blank"
               rel="noopener noreferrer"
-              class="block text-center bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+              class="block text-center bg-primary-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-sm"
             >
               Booking Sekarang
             </a>
@@ -210,6 +243,11 @@ const navLinks = [
     }
   };
 
-  // Run on initial load and subsequent page loads
+  // Run on initial load and subsequent Astro page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHeader);
+  } else {
+    initHeader();
+  }
   document.addEventListener('astro:page-load', initHeader);
 </script>

@@ -2,6 +2,7 @@
 import AdminLayout from '../../../../layouts/AdminLayout.astro';
 import { sql } from '../../../../lib/db';
 import { verifySessionToken } from '../../../../lib/auth';
+import { invalidateCarsCache } from '../../../../lib/cars';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -50,6 +51,7 @@ if (Astro.request.method === 'POST') {
               price = ${price}, price_unit = ${price_unit}, capacity = ${capacity}, transmission = ${transmission}, badge = ${badge}
           WHERE id = ${carId};
         `;
+        invalidateCarsCache();
         return Astro.redirect('/admin/cars?saved=1');
       }
     }

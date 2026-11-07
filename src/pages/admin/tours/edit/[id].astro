@@ -3,6 +3,7 @@ import AdminLayout from '../../../../layouts/AdminLayout.astro';
 import TourForm from '../../../../components/admin/TourForm.astro';
 import { sql } from '../../../../lib/db';
 import { verifySessionToken } from '../../../../lib/auth';
+import { invalidateToursCache } from '../../../../lib/tours';
 
 // Wajib login
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
@@ -41,6 +42,7 @@ if (Astro.request.method === 'POST') {
     const driver_service = get('driver_service') || 'Bahasa Indonesia / English';
     const driver_service_note = get('driver_service_note') || 'Ramah, sopan, & siap ambilkan foto terbaik';
     const important_info = get('important_info') || 'Pakaian yang nyaman dan menyerap keringat, kacamata hitam, topi/payung, kamera atau smartphone terisi penuh, serta uang tunai secukupnya untuk keperluan pribadi di lokasi wisata.';
+    const is_active = get('is_active') !== 'false';
 
     const ratingRaw = get('rating');
     const reviewsRaw = get('reviews_count');
@@ -69,6 +71,7 @@ if (Astro.request.method === 'POST') {
       price, price_unit, duration, badge, location,
       price_note, pickup_location, important_info,
       group_type, group_type_note, driver_service, driver_service_note,
+      is_active,
       booking_perks,
       rating, reviews_count,
       highlights, included, excluded, gallery, itinerary
@@ -109,9 +112,11 @@ if (Astro.request.method === 'POST') {
             group_type = ${group_type},
             group_type_note = ${group_type_note},
             driver_service = ${driver_service},
-            driver_service_note = ${driver_service_note}
+            driver_service_note = ${driver_service_note},
+            is_active = ${is_active}
           WHERE id = ${tourId};
         `;
+        invalidateToursCache();
         return Astro.redirect('/admin/tours?saved=1');
       }
     }

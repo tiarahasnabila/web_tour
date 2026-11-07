@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
+import { invalidateToursCache } from '../../../lib/tours';
 
 // Wajib login
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
@@ -20,7 +21,12 @@ if (Astro.request.method === 'POST') {
 
     if (action === 'delete' && tourId) {
       await sql`DELETE FROM tours WHERE id = ${Number(tourId)};`;
+      invalidateToursCache();
       flash = { type: 'success', text: 'Paket wisata berhasil dihapus.' };
+    } else if (action === 'toggle_status' && tourId) {
+      await sql`UPDATE tours SET is_active = NOT COALESCE(is_active, true) WHERE id = ${Number(tourId)};`;
+      invalidateToursCache();
+      flash = { type: 'success', text: 'Status publikasi paket berhasil diperbarui.' };
     }
   } catch (err: any) {
     console.error('Delete error:', err);
@@ -110,6 +116,15 @@ try {
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
                     <h3 class="font-semibold text-slate-900 truncate">{tour.title}</h3>
+                    {tour.is_active !== false ? (
+                      <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded-full">
+                        🟢 Aktif
+                      </span>
+                    ) : (
+                      <span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 font-bold px-2 py-0.5 rounded-full">
+                        ⚪ Nonaktif
+                      </span>
+                    )}
                     {tour.badge && (
                       <span class="text-[10px] bg-primary-100 text-primary-700 font-bold px-2 py-0.5 rounded-full">
                         {tour.badge}
@@ -126,6 +141,22 @@ try {
                   <p class="text-xs text-slate-500 line-clamp-1 mt-1">{tour.tagline || 'Tanpa tagline'}</p>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
+                  <form method="POST" class="inline">
+                    <input type="hidden" name="_action" value="toggle_status" />
+                    <input type="hidden" name="tour_id" value={tour.id} />
+                    <button
+                      type="submit"
+                      class:list={[
+                        "px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border",
+                        tour.is_active !== false
+                          ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                          : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                      ]}
+                      title={tour.is_active !== false ? "Klik untuk nonaktifkan" : "Klik untuk aktifkan"}
+                    >
+                      {tour.is_active !== false ? "Nonaktifkan" : "Aktifkan"}
+                    </button>
+                  </form>
                   <a href={`/tour-package/${tour.slug}`} target="_blank" class="px-3 py-2 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 hover:bg-slate-100 transition">Lihat</a>
                   <a href={`/admin/tours/edit/${tour.id}`} class="px-3 py-2 rounded-lg text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 transition">Edit</a>
                   <form method="POST" onsubmit="return confirmDelete(this, 'Hapus Paket Wisata?', 'Paket wisata ini akan dihapus secara permanen dari katalog website.');">
@@ -157,6 +188,14 @@ try {
                       {tour.badge}
                     </span>
                   )}
+                  <span class:list={[
+                    "absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md backdrop-blur",
+                    tour.is_active !== false
+                      ? "bg-emerald-600/90 text-white"
+                      : "bg-slate-900/90 text-amber-300 border border-amber-400/30"
+                  ]}>
+                    {tour.is_active !== false ? "🟢 Aktif" : "⚪ Nonaktif"}
+                  </span>
                   <div class="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-xl bg-slate-900/80 backdrop-blur text-white text-xs font-bold shadow-md">
                     {tour.price || 'Rp 450.000'} <span class="text-[10px] font-normal text-slate-300">{tour.price_unit || '/ mobil'}</span>
                   </div>
@@ -197,6 +236,22 @@ try {
                 >
                   Edit
                 </a>
+                <form method="POST" class="shrink-0">
+                  <input type="hidden" name="_action" value="toggle_status" />
+                  <input type="hidden" name="tour_id" value={tour.id} />
+                  <button
+                    type="submit"
+                    class:list={[
+                      "p-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer",
+                      tour.is_active !== false
+                        ? "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
+                        : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                    ]}
+                    title={tour.is_active !== false ? "Nonaktifkan paket" : "Aktifkan paket"}
+                  >
+                    {tour.is_active !== false ? "Nonaktifkan" : "Aktifkan"}
+                  </button>
+                </form>
                 <form
                   method="POST"
                   onsubmit="return confirmDelete(this, 'Hapus Paket Wisata?', 'Paket wisata ini akan dihapus secara permanen dari katalog website.');"

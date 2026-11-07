@@ -6,7 +6,7 @@ import { getAllTestimonials } from '../lib/testimonials';
 import { getWhatsAppUrl, OFFICE_ADDRESS } from '../lib/constants';
 
 const cars = await getAllCars();
-const tours = await getAllTours();
+const tours = (await getAllTours()).filter((t) => t.data.isActive);
 const testimonials = await getAllTestimonials();
 
 const featuredCars = ['all-new-avanza', 'innova-reborn', 'hiace', 'fortuner']

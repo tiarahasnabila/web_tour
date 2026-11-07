@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
+import { invalidateCarsCache } from '../../../lib/cars';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -45,6 +46,7 @@ if (Astro.request.method === 'POST') {
           INSERT INTO cars (title, slug, thumbnail, features, whatsapp_message, content, price, price_unit, capacity, transmission, badge)
           VALUES (${title}, ${slug}, ${thumbnail}, ${JSON.stringify(featuresArray)}, ${whatsapp_message}, ${content}, ${price}, ${price_unit}, ${capacity}, ${transmission}, ${badge});
         `;
+        invalidateCarsCache();
         return Astro.redirect('/admin/cars?saved=1');
       }
     }

@@ -18,6 +18,7 @@ export interface TourItem {
     price: string;
     priceUnit: string;
     duration: string;
+    isActive: boolean;
     rating?: number | null;
     reviewsCount?: number | null;
     badge: string;
@@ -89,7 +90,18 @@ function parseJsonArray<T>(val: any, fallback: T[]): T[] {
   }
 }
 
+let cachedTours: { data: TourItem[]; expires: number } | null = null;
+const TOURS_CACHE_TTL = 30 * 1000; // 30 seconds
+
+export function invalidateToursCache() {
+  cachedTours = null;
+}
+
 export async function getAllTours(): Promise<TourItem[]> {
+  if (cachedTours && cachedTours.expires > Date.now()) {
+    return cachedTours.data;
+  }
+
   try {
     const rows = await sql`
       SELECT 
@@ -97,6 +109,7 @@ export async function getAllTours(): Promise<TourItem[]> {
         COALESCE(price, 'Rp 450.000') as price,
         COALESCE(price_unit, '/ mobil') as price_unit,
         COALESCE(duration, '10-12 Jam') as duration,
+        COALESCE(is_active, true) as is_active,
         rating,
         reviews_count,
         COALESCE(badge, 'Paling Populer') as badge,
@@ -126,6 +139,7 @@ export async function getAllTours(): Promise<TourItem[]> {
           price: r.price,
           priceUnit: r.price_unit,
           duration: r.duration,
+          isActive: r.is_active !== false,
           rating: r.rating !== null && r.rating !== undefined && r.rating !== '' ? Number(r.rating) : null,
           reviewsCount: r.reviews_count !== null && r.reviews_count !== undefined && r.reviews_count !== '' ? Number(r.reviews_count) : null,
           badge: r.badge,
@@ -149,6 +163,8 @@ export async function getAllTours(): Promise<TourItem[]> {
         created_at: r.created_at,
       };
     });
+    cachedTours = { data: result, expires: Date.now() + TOURS_CACHE_TTL };
+    return result;
   } catch (err) {
     console.error('Error fetching tours from Neon:', err);
     return [];
@@ -163,6 +179,7 @@ export async function getTourBySlug(slug: string): Promise<TourItem | null> {
         COALESCE(price, 'Rp 450.000') as price,
         COALESCE(price_unit, '/ mobil') as price_unit,
         COALESCE(duration, '10-12 Jam') as duration,
+        COALESCE(is_active, true) as is_active,
         rating,
         reviews_count,
         COALESCE(badge, 'Paling Populer') as badge,
@@ -195,6 +212,7 @@ export async function getTourBySlug(slug: string): Promise<TourItem | null> {
         price: r.price,
         priceUnit: r.price_unit,
         duration: r.duration,
+        isActive: r.is_active !== false,
         rating: r.rating !== null && r.rating !== undefined && r.rating !== '' ? Number(r.rating) : null,
         reviewsCount: r.reviews_count !== null && r.reviews_count !== undefined && r.reviews_count !== '' ? Number(r.reviews_count) : null,
         badge: r.badge,

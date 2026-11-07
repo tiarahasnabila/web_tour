@@ -3,7 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getAllTours } from '../../lib/tours';
 import { getSiteSettings, formatWhatsAppUrl } from '../../lib/settings';
 
-const tours = await getAllTours();
+const tours = (await getAllTours()).filter((t) => t.data.isActive);
 const settings = await getSiteSettings();
 ---
 

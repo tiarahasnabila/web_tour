@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
+import { invalidateCarsCache } from '../../../lib/cars';
 
 // Wajib login
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
@@ -20,6 +21,7 @@ if (Astro.request.method === 'POST') {
 
     if (action === 'delete' && carId) {
       await sql`DELETE FROM cars WHERE id = ${Number(carId)};`;
+      invalidateCarsCache();
       flash = { type: 'success', text: 'Unit mobil berhasil dihapus.' };
     }
   } catch (err: any) {
