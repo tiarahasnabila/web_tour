@@ -192,48 +192,48 @@ const parseFeatures = (f: any): string[] => {
             <!-- Paket Wisata Box -->
             <a
               href="/admin/tours"
-              class="group p-4 rounded-2xl bg-slate-50/80 hover:bg-primary-50/50 border border-slate-200 hover:border-primary-300 transition flex items-center justify-between shadow-sm"
+              class="group p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 hover:bg-primary-50/50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-primary-300 dark:hover:border-primary-500/40 transition flex items-center justify-between shadow-sm"
             >
               <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-primary-500/10 text-primary-600 flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
+                <div class="w-11 h-11 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
                   🎒
                 </div>
                 <div>
-                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Paket Wisata</p>
-                  <p class="text-lg font-bold text-slate-900 group-hover:text-primary-700 transition">
-                    {tours.length} <span class="text-xs font-normal text-slate-500">item</span>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-400">Paket Wisata</p>
+                  <p class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-300 transition">
+                    {tours.length} <span class="text-xs font-normal text-slate-500 dark:text-slate-400">item</span>
                   </p>
                 </div>
               </div>
               <div class="text-right">
-                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-primary-100 text-primary-800">
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-primary-100 dark:bg-primary-950/60 text-primary-800 dark:text-primary-300 border border-primary-200/50 dark:border-primary-800/60">
                   {tourPct}%
                 </span>
-                <p class="text-[10px] text-slate-400 mt-1 group-hover:text-primary-600 transition">Kelola &rarr;</p>
+                <p class="text-[10px] text-slate-400 mt-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition">Kelola &rarr;</p>
               </div>
             </a>
 
             <!-- Armada Mobil Box -->
             <a
               href="/admin/cars"
-              class="group p-4 rounded-2xl bg-slate-50/80 hover:bg-sky-50/50 border border-slate-200 hover:border-sky-300 transition flex items-center justify-between shadow-sm"
+              class="group p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 hover:bg-sky-50/50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-sky-300 dark:hover:border-sky-500/40 transition flex items-center justify-between shadow-sm"
             >
               <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
+                <div class="w-11 h-11 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
                   🚗
                 </div>
                 <div>
-                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Armada Mobil</p>
-                  <p class="text-lg font-bold text-slate-900 group-hover:text-sky-700 transition">
-                    {cars.length} <span class="text-xs font-normal text-slate-500">item</span>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-400">Armada Mobil</p>
+                  <p class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-sky-700 dark:group-hover:text-sky-300 transition">
+                    {cars.length} <span class="text-xs font-normal text-slate-500 dark:text-slate-400">item</span>
                   </p>
                 </div>
               </div>
               <div class="text-right">
-                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-800">
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/50 dark:border-sky-800/60">
                   {total ? 100 - tourPct : 0}%
                 </span>
-                <p class="text-[10px] text-slate-400 mt-1 group-hover:text-sky-600 transition">Kelola &rarr;</p>
+                <p class="text-[10px] text-slate-400 mt-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition">Kelola &rarr;</p>
               </div>
             </a>
           </div>
@@ -277,12 +277,12 @@ const parseFeatures = (f: any): string[] => {
       </div>
 
       <!-- Aksi Cepat Card -->
-      <div class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between">
         <div>
           <!-- Header -->
-          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+              <h2 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
                 <span class="text-amber-500">⚡</span>
                 <span>Aksi Cepat</span>
               </h2>
@@ -295,13 +295,13 @@ const parseFeatures = (f: any): string[] => {
             <!-- Tambah Paket -->
             <a
               href="/admin/tours/tambah"
-              class="group flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 hover:bg-primary-50/80 border border-slate-200 hover:border-primary-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+              class="group flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 hover:bg-primary-50/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-primary-300 dark:hover:border-primary-500/40 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
             >
               <div class="w-9 h-9 rounded-xl bg-primary-600 text-white flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold text-slate-900 group-hover:text-primary-700 transition truncate">Tambah Paket</p>
+                <p class="text-xs font-bold text-slate-900 dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-300 transition truncate">Tambah Paket</p>
                 <p class="text-[10px] text-slate-400 truncate mt-0.5">Rute paket baru</p>
               </div>
             </a>
@@ -309,13 +309,13 @@ const parseFeatures = (f: any): string[] => {
             <!-- Tambah Mobil -->
             <a
               href="/admin/cars/tambah"
-              class="group flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 hover:bg-sky-50/80 border border-slate-200 hover:border-sky-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+              class="group flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 hover:bg-sky-50/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-sky-300 dark:hover:border-sky-500/40 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
             >
               <div class="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold text-slate-900 group-hover:text-sky-700 transition truncate">Tambah Mobil</p>
+                <p class="text-xs font-bold text-slate-900 dark:text-white group-hover:text-sky-700 dark:group-hover:text-sky-300 transition truncate">Tambah Mobil</p>
                 <p class="text-[10px] text-slate-400 truncate mt-0.5">Unit rental baru</p>
               </div>
             </a>
@@ -323,18 +323,18 @@ const parseFeatures = (f: any): string[] => {
             <!-- Kelola Semua Paket -->
             <a
               href="/admin/tours"
-              class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+              class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-slate-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
             >
               <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                <span class="w-8 h-8 rounded-xl bg-slate-200/70 text-slate-600 flex items-center justify-center text-xs group-hover:text-primary-600 transition shrink-0">
+                <span class="w-8 h-8 rounded-xl bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs group-hover:text-primary-600 transition shrink-0">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4-9 4-9-4zm0 5l9 4 9-4M3 17l9 4 9-4" /></svg>
                 </span>
                 <div class="min-w-0 flex-1">
-                  <p class="text-xs font-bold text-slate-800 truncate">Semua Paket</p>
+                  <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Semua Paket</p>
                   <p class="text-[10px] text-slate-400 truncate">Katalog wisata</p>
                 </div>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-50 text-primary-700 border border-primary-200/60 font-mono shrink-0 ml-1">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 border border-primary-200/60 dark:border-primary-800/60 font-mono shrink-0 ml-1">
                 {tours.length}
               </span>
             </a>
@@ -342,18 +342,18 @@ const parseFeatures = (f: any): string[] => {
             <!-- Kelola Armada -->
             <a
               href="/admin/cars"
-              class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+              class="group flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-slate-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
             >
               <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                <span class="w-8 h-8 rounded-xl bg-slate-200/70 text-slate-600 flex items-center justify-center text-xs group-hover:text-sky-600 transition shrink-0">
+                <span class="w-8 h-8 rounded-xl bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs group-hover:text-sky-600 transition shrink-0">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 17h-.5A1.5 1.5 0 013 15.5V12l2-5h14l2 5v3.5a1.5 1.5 0 01-1.5 1.5H19M7 17a2 2 0 104 0 2 2 0 00-4 0zm6 0a2 2 0 104 0 2 2 0 00-4 0" /></svg>
                 </span>
                 <div class="min-w-0 flex-1">
-                  <p class="text-xs font-bold text-slate-800 truncate">Semua Armada</p>
+                  <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">Semua Armada</p>
                   <p class="text-[10px] text-slate-400 truncate">Unit kendaraan</p>
                 </div>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60 font-mono shrink-0 ml-1">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60 font-mono shrink-0 ml-1">
                 {cars.length}
               </span>
             </a>
@@ -361,7 +361,7 @@ const parseFeatures = (f: any): string[] => {
         </div>
 
         <!-- Buka Website Link Card -->
-        <div class="pt-4 mt-4 border-t border-slate-100">
+        <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
           <a
             href="/"
             target="_blank"
@@ -376,38 +376,38 @@ const parseFeatures = (f: any): string[] => {
 
     <!-- Terbaru -->
     <section class="grid lg:grid-cols-2 gap-6">
-      <div class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm flex flex-col justify-between">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-sm flex flex-col justify-between">
         <div>
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">🎒</span>
-              <h2 class="font-bold text-slate-900 text-base">Paket Terbaru</h2>
+              <span class="w-7 h-7 rounded-lg bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 flex items-center justify-center text-sm font-bold">🎒</span>
+              <h2 class="font-bold text-slate-900 dark:text-white text-base">Paket Terbaru</h2>
             </div>
-            <a href="/admin/tours" class="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline">Lihat semua &rarr;</a>
+            <a href="/admin/tours" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 hover:underline">Lihat semua &rarr;</a>
           </div>
           {tours.length === 0 ? (
-            <p class="px-6 py-10 text-center text-sm text-slate-400">Belum ada paket.</p>
+            <p class="px-6 py-10 text-center text-sm text-slate-400 dark:text-slate-500">Belum ada paket.</p>
           ) : (
             <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {tours.slice(0, 4).map((t) => (
                 <a
                   href={`/admin/tours/edit/${t.id}`}
-                  class="group flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/70 hover:bg-primary-50/60 border border-slate-200/70 hover:border-primary-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+                  class="group flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/70 dark:bg-slate-800/80 hover:bg-primary-50/60 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-700/80 hover:border-primary-300 dark:hover:border-primary-500/40 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
                 >
                   <img
                     src={t.thumbnail}
                     alt=""
                     loading="lazy"
-                    class="w-12 h-12 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-200/60 group-hover:scale-105 transition-transform"
+                    class="w-12 h-12 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/60 dark:border-slate-700 group-hover:scale-105 transition-transform"
                   />
                   <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-slate-900 group-hover:text-primary-600 transition truncate">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition truncate">
                       {t.title}
                     </p>
-                    <p class="text-xs text-slate-400 truncate mt-0.5">
+                    <p class="text-xs text-slate-500 dark:text-slate-300 truncate mt-0.5">
                       {t.tagline || 'Tanpa tagline'}
                     </p>
-                    <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400">
+                    <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400 dark:text-slate-400">
                       <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -421,38 +421,38 @@ const parseFeatures = (f: any): string[] => {
         </div>
       </div>
 
-      <div class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm flex flex-col justify-between">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-sm flex flex-col justify-between">
         <div>
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-sm font-bold">🚗</span>
-              <h2 class="font-bold text-slate-900 text-base">Armada Terbaru</h2>
+              <span class="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center text-sm font-bold">🚗</span>
+              <h2 class="font-bold text-slate-900 dark:text-white text-base">Armada Terbaru</h2>
             </div>
-            <a href="/admin/cars" class="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline">Lihat semua &rarr;</a>
+            <a href="/admin/cars" class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:underline">Lihat semua &rarr;</a>
           </div>
           {cars.length === 0 ? (
-            <p class="px-6 py-10 text-center text-sm text-slate-400">Belum ada mobil.</p>
+            <p class="px-6 py-10 text-center text-sm text-slate-400 dark:text-slate-500">Belum ada mobil.</p>
           ) : (
             <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {cars.slice(0, 4).map((c) => (
                 <a
                   href={`/admin/cars/edit/${c.id}`}
-                  class="group flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/70 hover:bg-sky-50/60 border border-slate-200/70 hover:border-sky-300 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
+                  class="group flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50/70 dark:bg-slate-800/80 hover:bg-sky-50/60 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-700/80 hover:border-sky-300 dark:hover:border-sky-500/40 transition shadow-xs hover:shadow-md hover:-translate-y-0.5"
                 >
                   <img
                     src={c.thumbnail}
                     alt=""
                     loading="lazy"
-                    class="w-12 h-12 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-200/60 group-hover:scale-105 transition-transform"
+                    class="w-12 h-12 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/60 dark:border-slate-700 group-hover:scale-105 transition-transform"
                   />
                   <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-slate-900 group-hover:text-sky-600 transition truncate">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition truncate">
                       {c.title}
                     </p>
-                    <p class="text-xs text-slate-400 truncate mt-0.5">
+                    <p class="text-xs text-slate-500 dark:text-slate-300 truncate mt-0.5">
                       {parseFeatures(c.features).length} fasilitas
                     </p>
-                    <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400">
+                    <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400 dark:text-slate-400">
                       <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
