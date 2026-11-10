@@ -90,34 +90,37 @@ function parseJsonArray<T>(val: any, fallback: T[]): T[] {
   }
 }
 
+let cachedTours: { data: TourItem[]; expires: number } | null = null;
+const TOURS_CACHE_TTL = 30 * 1000; // 30 detik
+
+export function invalidateToursCache() {
+  cachedTours = null;
+}
+
 export async function getAllTours(): Promise<TourItem[]> {
-  try {
-    const rows = await sql`
-      SELECT 
-        id, title, slug, thumbnail, tagline, whatsapp_message, content, created_at,
-        COALESCE(price, 'Rp 450.000') as price,
-        COALESCE(price_unit, '/ mobil') as price_unit,
-        COALESCE(duration, '10-12 Jam') as duration,
-        COALESCE(is_active, true) as is_active,
-        rating,
-        reviews_count,
-        COALESCE(badge, 'Paling Populer') as badge,
-        COALESCE(location, 'Yogyakarta') as location,
-        COALESCE(price_note, 'Harga per mobil (kapasitas 1-6 orang). Termasuk mobil ber-AC, driver ramah, & BBM.') as price_note,
-        COALESCE(important_info, 'Pakaian yang nyaman dan menyerap keringat, kacamata hitam, topi/payung, kamera atau smartphone terisi penuh, serta uang tunai secukupnya untuk keperluan pribadi di lokasi wisata.') as important_info,
-        COALESCE(pickup_location, 'Hotel, Stasiun Tugu/Lempuyangan, Bandara') as pickup_location,
-        COALESCE(group_type, 'Hanya Anda & Rombongan') as group_type,
-        COALESCE(group_type_note, 'Tidak digabung dengan tamu lain') as group_type_note,
-        COALESCE(driver_service, 'Bahasa Indonesia / English') as driver_service,
-        COALESCE(driver_service_note, 'Ramah, sopan, & siap ambilkan foto terbaik') as driver_service_note,
-        booking_perks,
-        highlights, itinerary, included, excluded, gallery
-      FROM tours 
-      ORDER BY id ASC;
-    `;
-    return rows.map((r: any) => {
-      const gallery = parseJsonArray<string>(r.gallery, [r.thumbnail]);
-      return {
+  if (cachedTours && cachedTours.expires > Date.now()) {
+    return cachedTours.data;
+  }
+
+  const maxRetries = 2;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const rows = await sql`
+        SELECT 
+          id, title, slug, thumbnail, tagline, whatsapp_message, created_at,
+          COALESCE(price, 'Rp 450.000') as price,
+          COALESCE(price_unit, '/ mobil') as price_unit,
+          COALESCE(duration, '10-12 Jam') as duration,
+          COALESCE(is_active, true) as is_active,
+          rating,
+          reviews_count,
+          COALESCE(badge, 'Paling Populer') as badge,
+          COALESCE(location, 'Yogyakarta') as location,
+          booking_perks
+        FROM tours 
+        ORDER BY id ASC;
+      `;
+      const data = rows.map((r: any) => ({
         id: r.id,
         slug: r.slug,
         data: {
@@ -133,29 +136,45 @@ export async function getAllTours(): Promise<TourItem[]> {
           reviewsCount: r.reviews_count !== null && r.reviews_count !== undefined && r.reviews_count !== '' ? Number(r.reviews_count) : null,
           badge: r.badge,
           location: r.location,
-          highlights: parseJsonArray<string>(r.highlights, defaultHighlights),
-          itinerary: parseJsonArray<TourItineraryItem>(r.itinerary, defaultItinerary),
-          included: parseJsonArray<string>(r.included, defaultIncluded),
-          excluded: parseJsonArray<string>(r.excluded, defaultExcluded),
-          gallery: gallery.length > 0 ? gallery : [r.thumbnail],
-          priceNote: r.price_note,
-          importantInfo: r.important_info,
-          pickupLocation: r.pickup_location,
-          groupType: r.group_type,
-          groupTypeNote: r.group_type_note,
-          driverService: r.driver_service,
-          driverServiceNote: r.driver_service_note,
+          highlights: defaultHighlights,
+          itinerary: defaultItinerary,
+          included: defaultIncluded,
+          excluded: defaultExcluded,
+          gallery: [r.thumbnail],
+          priceNote: 'Harga per mobil (kapasitas 1-6 orang). Termasuk mobil ber-AC, driver ramah, & BBM.',
+          importantInfo: '',
+          pickupLocation: 'Hotel, Stasiun Tugu/Lempuyangan, Bandara',
+          groupType: 'Hanya Anda & Rombongan',
+          groupTypeNote: 'Tidak digabung dengan tamu lain',
+          driverService: 'Bahasa Indonesia / English',
+          driverServiceNote: 'Ramah, sopan, & siap ambilkan foto terbaik',
           bookingPerks: parseJsonArray<string>(r.booking_perks, defaultBookingPerks),
         },
-        content: r.content,
-        htmlContent: marked.parse(r.content || '') as string,
+        content: '',
+        htmlContent: '',
         created_at: r.created_at,
+      }));
+
+      cachedTours = {
+        data,
+        expires: Date.now() + TOURS_CACHE_TTL,
       };
-    });
-  } catch (err) {
-    console.error('Error fetching tours from Neon:', err);
-    return [];
+      return data;
+    } catch (err) {
+      if (attempt < maxRetries) {
+        console.warn(`Retry ${attempt + 1}/${maxRetries} fetching tours after error:`, (err as any)?.message || err);
+        await new Promise((res) => setTimeout(res, 300));
+        continue;
+      }
+      console.error('Error fetching tours from Neon after retries:', err);
+      if (cachedTours) {
+        console.warn('Returning stale cached tours as fallback.');
+        return cachedTours.data;
+      }
+      return [];
+    }
   }
+  return [];
 }
 
 export async function getTourBySlug(slug: string): Promise<TourItem | null> {

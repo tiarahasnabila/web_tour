@@ -109,13 +109,39 @@ const nav = [
     html.dark .bg-slate-50 {
       background-color: #020617 !important;
     }
-    html.dark .bg-slate-50\/90,
-    html.dark .bg-slate-50\/80,
-    html.dark .bg-slate-50\/70,
-    html.dark .bg-slate-50\/60,
-    html.dark .bg-slate-50\/50 {
+    /* Dashboard inner action & recent item cards in Dark Mode */
+    html.dark .dashboard-card,
+    html.dark a.dashboard-card,
+    html.dark a[href*="/admin/tours/edit/"],
+    html.dark a[href*="/admin/cars/edit/"],
+    html.dark a[href="/admin/tours/tambah"],
+    html.dark a[href="/admin/cars/tambah"] {
       background-color: #1e293b !important;
       border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    html.dark a.dashboard-card:hover,
+    html.dark a[href*="/admin/tours/edit/"]:hover,
+    html.dark a[href*="/admin/cars/edit/"]:hover,
+    html.dark a[href="/admin/tours/tambah"]:hover,
+    html.dark a[href="/admin/cars/tambah"]:hover {
+      background-color: #273549 !important;
+      border-color: #475569 !important;
+    }
+    html.dark a[href*="/admin/tours/edit/"] p,
+    html.dark a[href*="/admin/cars/edit/"] p,
+    html.dark a.dashboard-card p {
+      color: #f8fafc !important;
+    }
+    html.dark a[href*="/admin/tours/edit/"] p.text-slate-500,
+    html.dark a[href*="/admin/cars/edit/"] p.text-slate-500,
+    html.dark a[href*="/admin/tours/edit/"] p.text-slate-400,
+    html.dark a[href*="/admin/cars/edit/"] p.text-slate-400,
+    html.dark a[href*="/admin/cars/edit/"] p.text-slate-500,
+    html.dark a[href*="/admin/cars/edit/"] p.text-slate-400,
+    html.dark a.dashboard-card p.text-slate-500,
+    html.dark a.dashboard-card p.text-slate-400 {
+      color: #94a3b8 !important;
     }
     html.dark .bg-slate-100 {
       background-color: #1e293b !important;

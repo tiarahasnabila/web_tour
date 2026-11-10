@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
+import { invalidateToursCache } from '../../../lib/tours';
 
 // Wajib login
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
@@ -20,9 +21,11 @@ if (Astro.request.method === 'POST') {
 
     if (action === 'delete' && tourId) {
       await sql`DELETE FROM tours WHERE id = ${Number(tourId)};`;
+      invalidateToursCache();
       flash = { type: 'success', text: 'Paket wisata berhasil dihapus.' };
     } else if (action === 'toggle_status' && tourId) {
       await sql`UPDATE tours SET is_active = NOT COALESCE(is_active, true) WHERE id = ${Number(tourId)};`;
+      invalidateToursCache();
       flash = { type: 'success', text: 'Status publikasi paket berhasil diperbarui.' };
     }
   } catch (err: any) {
