@@ -140,14 +140,24 @@ const settings = await getSiteSettings();
                     {tour.data.tagline || 'Eksplorasi destinasi ikonik Yogyakarta dengan kendaraan private ber-AC dan driver ramah.'}
                   </p>
 
-                  <!-- Value propositions bullet chips -->
+                  <!-- Value propositions bullet chips (Dinamis dari Poin Keunggulan Admin) -->
                   <div class="flex flex-wrap gap-1.5 mb-2">
-                    <span class="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-[11px] font-medium px-2 py-0.5 rounded-md">
-                      ✓ Mobil + Driver + BBM
-                    </span>
-                    <span class="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-[11px] font-medium px-2 py-0.5 rounded-md">
-                      ✓ Bebas Custom Waktu
-                    </span>
+                    {tour.data.bookingPerks && tour.data.bookingPerks.length > 0 ? (
+                      tour.data.bookingPerks.slice(0, 2).map((perk: string) => (
+                        <span class="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-[11px] font-medium px-2 py-0.5 rounded-md">
+                          ✓ {perk}
+                        </span>
+                      ))
+                    ) : (
+                      <>
+                        <span class="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-[11px] font-medium px-2 py-0.5 rounded-md">
+                          ✓ Mobil + Driver + BBM
+                        </span>
+                        <span class="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-[11px] font-medium px-2 py-0.5 rounded-md">
+                          ✓ Bebas Custom Waktu
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
