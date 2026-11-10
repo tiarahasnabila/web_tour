@@ -10,6 +10,14 @@ if (!user) {
 }
 
 let flash: { type: 'success' | 'error'; text: string } | null = null;
+const urlParam = Astro.url.searchParams;
+if (urlParam.get('saved') === '1') {
+  flash = {
+    type: 'success',
+    text: 'Semua pengaturan website, kontak WhatsApp, dan SEO berhasil disimpan serta langsung aktif!',
+  };
+}
+
 let settings: any = {};
 
 if (Astro.request.method === 'POST') {
@@ -20,14 +28,22 @@ if (Astro.request.method === 'POST') {
     const site_title = get('site_title');
     const site_description = get('site_description');
     const phone_number = get('phone_number');
-    const whatsapp_number = get('whatsapp_number').replace(/\D/g, '');
+    let whatsapp_number = get('whatsapp_number').replace(/\D/g, '');
+    if (whatsapp_number.startsWith('08')) {
+      whatsapp_number = '62' + whatsapp_number.slice(1);
+    }
     const email_address = get('email_address');
     const office_address = get('office_address');
     const instagram_url = get('instagram_url');
     const operating_hours = get('operating_hours');
     const google_analytics_id = get('google_analytics_id');
-    const google_site_verification = get('google_site_verification');
-    const canonical_site_url = get('canonical_site_url') || 'https://beyondjogjatours.com';
+    let google_site_verification = get('google_site_verification');
+    // Jika admin menempelkan tag <meta ... content="xyz"> utuh, ambil isi content-nya saja
+    const metaMatch = google_site_verification.match(/content=["']([^"']+)["']/i);
+    if (metaMatch && metaMatch[1]) {
+      google_site_verification = metaMatch[1].trim();
+    }
+    const canonical_site_url = (get('canonical_site_url') || 'https://beyondjogjatours.com').replace(/\/+$/, '');
 
     if (!site_title || !whatsapp_number) {
       flash = { type: 'error', text: 'Nama Website dan Nomor WhatsApp CS wajib diisi.' };
@@ -49,7 +65,7 @@ if (Astro.request.method === 'POST') {
         WHERE id = 1;
       `;
       invalidateSettingsCache();
-      flash = { type: 'success', text: 'Semua pengaturan website & kontak berhasil disimpan dan langsung aktif!' };
+      return Astro.redirect('/admin/settings?saved=1');
     }
   } catch (err: any) {
     console.error('Settings update error:', err);
@@ -64,348 +80,961 @@ try {
   console.error('Fetch settings error:', err);
 }
 
+const currentTitle = settings.site_title || 'Beyond Jogja Tours';
+const currentDesc =
+  settings.site_description ||
+  'Jasa Sewa Mobil & Paket Wisata Jogja Terpercaya. Liburan nyaman, driver ramah, armada terawat, dan harga transparan.';
+const currentWa = (settings.whatsapp_number || '6285213814714').replace(/\D/g, '');
+const currentPhone = settings.phone_number || '+62 852-1381-4714';
+const currentEmail = settings.email_address || 'beyondjogjajourneys@gmail.com';
+const currentIg = settings.instagram_url || 'https://www.instagram.com/beyondjogja.tours/';
+const currentHours = settings.operating_hours || 'Setiap Hari: 07:00 – 22:00 WIB';
+const currentAddress =
+  settings.office_address ||
+  'Perumahan Samara Regency, Mertosanan Kulon, Potorono, Kec. Banguntapan, Kabupaten Bantul, Daerah Istimewa Yogyakarta 55196';
+const currentCanonical = settings.canonical_site_url || 'https://beyondjogjatours.com';
+const currentGa = settings.google_analytics_id || '';
+const currentGsc = settings.google_site_verification || '';
+
+const hasGa = Boolean(currentGa && currentGa.trim().length > 0);
+const hasGsc = Boolean(currentGsc && currentGsc.trim().length > 0);
+
+const updatedAtFormatted = settings.updated_at
+  ? new Date(settings.updated_at).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  : 'Baru saja';
+
 const inputClass =
-  'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition shadow-xs placeholder:text-slate-400 dark:placeholder:text-slate-500';
+  'w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-500/15 focus:border-primary-500 transition shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500';
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5';
 ---
 
 <AdminLayout title="Pengaturan Website" active="settings">
-  <div class="space-y-7 max-w-4xl pb-16">
-    
-    <!-- Top Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-950/50 border border-primary-200/60 dark:border-primary-500/20 text-primary-700 dark:text-primary-300 text-xs font-semibold mb-2">
-          <span class="w-2 h-2 rounded-full bg-primary-500"></span>
-          <span>Konfigurasi Global</span>
-        </div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Pengaturan Kontak & Website</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-          Kelola kontak WhatsApp CS, alamat kantor, profil media sosial, dan integrasi Google SEO secara terpusat.
-        </p>
-      </div>
+  <div class="max-w-6xl mx-auto space-y-6 pb-24">
 
-      <div class="flex items-center gap-3">
-        <button
-          type="button"
-          id="btn-header-save"
-          class="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Simpan Pengaturan</span>
-        </button>
+    <!-- HERO BANNER HEADER -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-navy-900 to-slate-900 text-white p-6 sm:p-8 shadow-xl border border-white/10">
+      <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary-500/20 blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div class="space-y-2 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-primary-300 text-xs font-semibold tracking-wide">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Konfigurasi Global & Integrasi SEO</span>
+            <span class="text-white/30">•</span>
+            <span class="text-slate-300 font-normal">Diperbarui: {updatedAtFormatted}</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            Pengaturan Website & Kontak Utama
+          </h1>
+          <p class="text-sm text-slate-300 leading-relaxed">
+            Kelola identitas brand, nomor tujuan booking WhatsApp CS, informasi basecamp operasional, serta integrasi Google Search & Analytics dalam satu panel real-time.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-semibold border border-white/15 transition backdrop-blur-xs"
+          >
+            <svg class="w-4 h-4 text-primary-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span>Lihat Website</span>
+          </a>
+          <button
+            type="button"
+            id="btn-header-save"
+            class="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-primary-600/30 transition-all active:scale-95 cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Simpan Perubahan</span>
+            <kbd class="hidden sm:inline-block ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-black/25 text-white/90 rounded border border-white/15">
+              Ctrl+S
+            </kbd>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Flash Alert -->
+    <!-- FLASH NOTIFICATION -->
     {flash && (
       <div class:list={[
-        'px-4.5 py-3.5 rounded-2xl text-sm font-medium border flex items-center justify-between gap-3 shadow-xs',
+        'px-5 py-4 rounded-2xl text-sm font-semibold border flex items-center justify-between gap-3 shadow-sm',
         flash.type === 'success'
-          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300'
-          : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-300',
+          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          : 'bg-rose-50 border-rose-200 text-rose-800',
       ]}>
-        <div class="flex items-center gap-2.5">
-          <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d={flash.type === 'success' ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
-          </svg>
+        <div class="flex items-center gap-3">
+          <div class:list={[
+            'w-8 h-8 rounded-xl flex items-center justify-center shrink-0',
+            flash.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white',
+          ]}>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d={flash.type === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'} />
+            </svg>
+          </div>
           <span>{flash.text}</span>
         </div>
+        <button
+          type="button"
+          onclick="this.parentElement.remove()"
+          class="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded-lg hover:bg-black/5 transition cursor-pointer"
+        >
+          Tutup ✕
+        </button>
       </div>
     )}
 
-    <!-- Main Settings Form -->
-    <form id="settings-form" method="POST" class="space-y-6">
-
-      <!-- SECTION 1: Identitas & Metadata Brand -->
-      <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-5">
-        <div class="flex items-start gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div class="w-10 h-10 rounded-2xl bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 flex items-center justify-center text-lg shrink-0 border border-primary-100 dark:border-primary-800/40">
-            🏢
-          </div>
-          <div>
-            <h2 class="font-bold text-slate-900 dark:text-white text-base">Identitas & Metadata Brand</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nama website dan deskripsi meta utama yang tampil pada header dan hasil pencarian Google.</p>
-          </div>
+    <!-- 3 RINGKASAN STATUS KONFIGURASI CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- Card 1: WhatsApp CS -->
+      <div class="dashboard-card bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
         </div>
-
-        <div class="space-y-4.5">
-          <div>
-            <label for="site_title" class={labelClass}>
-              Nama Website / Brand <span class="text-rose-500">*</span>
-            </label>
-            <input
-              id="site_title"
-              name="site_title"
-              type="text"
-              required
-              value={settings.site_title || 'Beyond Jogja Tours'}
-              placeholder="Contoh: Beyond Jogja Tours"
-              class={inputClass}
-            />
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Nama ini digunakan di logo header, judul halaman, dan copyright footer.</p>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <p class="card-subtitle text-xs font-semibold uppercase tracking-wider text-slate-400">WhatsApp Booking</p>
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Aktif
+            </span>
           </div>
-
-          <div>
-            <label for="site_description" class={labelClass}>
-              Deskripsi Singkat Website (Meta Description)
-            </label>
-            <textarea
-              id="site_description"
-              name="site_description"
-              rows="2"
-              class={`${inputClass} leading-relaxed`}
-              placeholder="Jasa Sewa Mobil & Paket Wisata Jogja Terpercaya. Liburan nyaman, driver ramah, armada terawat, dan harga transparan."
-            >{settings.site_description || ''}</textarea>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Ringkasan website yang muncul di hasil pencarian Google dan saat link dibagikan di WhatsApp/Medsos.</p>
-          </div>
+          <p id="stat-wa-display" class="card-title text-base font-extrabold text-slate-900 truncate font-mono mt-0.5">
+            +{currentWa}
+          </p>
+          <a
+            id="stat-wa-link"
+            href={`https://wa.me/${currentWa}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:underline mt-0.5"
+          >
+            <span>Tes Buka Chat WA</span>
+            <span>↗</span>
+          </a>
         </div>
-      </section>
+      </div>
 
-      <!-- SECTION 2: Kontak & Layanan Pelanggan -->
-      <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-5">
-        <div class="flex items-start gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div class="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 border border-emerald-100 dark:border-emerald-800/40">
-            💬
-          </div>
-          <div>
-            <h2 class="font-bold text-slate-900 dark:text-white text-base">Kontak & Layanan Pelanggan</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Informasi kontak langsung yang terhubung ke tombol booking WhatsApp dan halaman Kontak.</p>
-          </div>
+      <!-- Card 2: Identitas & Domain -->
+      <div class="dashboard-card bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-600 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+          </svg>
         </div>
+        <div class="min-w-0 flex-1">
+          <p class="card-subtitle text-xs font-semibold uppercase tracking-wider text-slate-400">Brand & Domain</p>
+          <p id="stat-brand-display" class="card-title text-base font-extrabold text-slate-900 truncate mt-0.5">
+            {currentTitle}
+          </p>
+          <p id="stat-domain-display" class="card-subtitle text-xs text-slate-500 truncate mt-0.5">
+            {currentCanonical.replace(/^https?:\/\//, '')}
+          </p>
+        </div>
+      </div>
 
-        <div class="grid sm:grid-cols-2 gap-5">
-          <!-- Nomor WhatsApp CS -->
-          <div class="sm:col-span-2 p-4.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 space-y-2">
-            <div class="flex items-center justify-between">
-              <label for="whatsapp_number" class="block text-xs font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                Nomor WhatsApp CS (Tujuan Pemesanan) <span class="text-rose-500">*</span>
-              </label>
-              <a
-                id="wa-test-link"
-                href={`https://wa.me/${(settings.whatsapp_number || '6285213814714').replace(/\D/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline"
-              >
-                <span>Tes Buka Chat WA</span>
-                <span>↗</span>
-              </a>
+      <!-- Card 3: Integrasi Google SEO -->
+      <div class="dashboard-card bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-500 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="card-subtitle text-xs font-semibold uppercase tracking-wider text-slate-400">Status Google SEO</p>
+          <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+            <span class:list={[
+              'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border',
+              hasGa
+                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25'
+                : 'bg-amber-500/10 text-amber-600 border-amber-500/25',
+            ]}>
+              <span>{hasGa ? '✓ GA4 Aktif' : '○ GA4 Kosong'}</span>
+            </span>
+            <span class:list={[
+              'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border',
+              hasGsc
+                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25'
+                : 'bg-amber-500/10 text-amber-600 border-amber-500/25',
+            ]}>
+              <span>{hasGsc ? '✓ Search Console' : '○ GSC Kosong'}</span>
+            </span>
+          </div>
+          <p class="card-subtitle text-[11px] text-slate-500 mt-1">Sitemap XML & Meta Tag otomatis</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER TAB BAR -->
+    <div class="dashboard-card bg-white rounded-2xl border border-slate-200/80 p-2 shadow-xs flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5" role="tablist">
+        <button
+          type="button"
+          data-tab-target="all"
+          class="settings-tab-btn active px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer bg-primary-600 text-white shadow-xs"
+        >
+          Semua Pengaturan
+        </button>
+        <button
+          type="button"
+          data-tab-target="sec-brand"
+          class="settings-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 hover:bg-slate-100/80"
+        >
+          🏢 Identitas & Brand
+        </button>
+        <button
+          type="button"
+          data-tab-target="sec-contact"
+          class="settings-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 hover:bg-slate-100/80"
+        >
+          💬 Kontak & Operasional
+        </button>
+        <button
+          type="button"
+          data-tab-target="sec-seo"
+          class="settings-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 hover:bg-slate-100/80"
+        >
+          🔍 SEO & Google Analytics
+        </button>
+      </div>
+
+      <div id="dirty-indicator" class="hidden items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 text-xs font-bold">
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+        <span>Ada perubahan belum disimpan</span>
+      </div>
+    </div>
+
+    <!-- MAIN FORM + SIDEBAR PREVIEW -->
+    <form id="settings-form" method="POST" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT COLUMN: FORM SECTIONS (8 cols) -->
+      <div class="lg:col-span-8 space-y-6">
+
+        <!-- SECTION 1: Identitas & Metadata Brand -->
+        <section id="sec-brand" class="settings-section bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-xs space-y-5">
+          <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
+            <div class="flex items-start gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-primary-500/10 text-primary-600 flex items-center justify-center text-xl shrink-0 border border-primary-500/20">
+                🏢
+              </div>
+              <div>
+                <h2 class="card-title font-bold text-slate-900 text-base">Identitas & Metadata Brand</h2>
+                <p class="card-subtitle text-xs text-slate-500 mt-0.5">
+                  Nama resmi brand dan deskripsi meta yang tampil di tab browser, Google, dan preview WhatsApp.
+                </p>
+              </div>
             </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-500/10 text-primary-600 border border-primary-500/20 shrink-0">
+              Bagian 1
+            </span>
+          </div>
 
-            <div class="flex rounded-xl border border-emerald-300 dark:border-emerald-700 overflow-hidden focus-within:ring-4 focus-within:ring-emerald-500/10 focus-within:border-emerald-500 transition shadow-xs bg-white dark:bg-slate-800">
-              <span class="px-3.5 flex items-center bg-emerald-100/60 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 text-xs font-mono font-bold border-r border-emerald-300 dark:border-emerald-700">
-                WA:
-              </span>
+          <div class="space-y-5">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="site_title" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Nama Website / Brand <span class="text-rose-500">*</span>
+                </label>
+                <span id="title-char-count" class="text-[11px] font-mono text-slate-400">
+                  {currentTitle.length} karakter
+                </span>
+              </div>
               <input
-                id="whatsapp_number"
-                name="whatsapp_number"
+                id="site_title"
+                name="site_title"
                 type="text"
                 required
-                value={settings.whatsapp_number || '6285213814714'}
-                placeholder="628xxxxxxxxxx"
-                class="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent text-slate-900 dark:text-white font-mono"
+                value={currentTitle}
+                placeholder="Contoh: Beyond Jogja Tours"
+                class={inputClass}
               />
+              <p class="card-subtitle text-[11px] text-slate-500 mt-1.5">
+                Digunakan secara otomatis pada logo navbar, judul tab halaman (`Title Tag`), dan hak cipta footer.
+              </p>
             </div>
-            <p class="text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed">
-              Wajib diawali <strong>62</strong> (contoh: <code>6285213814714</code>). Seluruh tombol "Pesan Sekarang", floating WA, dan form kontak akan mengarah ke nomor ini.
-            </p>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="site_description" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Deskripsi Singkat Website (Meta Description)
+                </label>
+                <span id="desc-char-badge" class="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500">
+                  {currentDesc.length} / 160 karakter
+                </span>
+              </div>
+              <textarea
+                id="site_description"
+                name="site_description"
+                rows="3"
+                class={`${inputClass} leading-relaxed`}
+                placeholder="Jasa Sewa Mobil & Paket Wisata Jogja Terpercaya. Liburan nyaman, driver ramah, armada terawat, dan harga transparan."
+              >{currentDesc}</textarea>
+              <div class="flex items-center justify-between gap-2 mt-1.5">
+                <p class="card-subtitle text-[11px] text-slate-500">
+                  Panjang ideal SEO Google adalah <strong>120–160 karakter</strong> agar tidak terpotong di hasil pencarian.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Kontak & Layanan Pelanggan -->
+        <section id="sec-contact" class="settings-section bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-xs space-y-6">
+          <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
+            <div class="flex items-start gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl shrink-0 border border-emerald-500/20">
+                💬
+              </div>
+              <div>
+                <h2 class="card-title font-bold text-slate-900 text-base">Kontak CS & Operasional Basecamp</h2>
+                <p class="card-subtitle text-xs text-slate-500 mt-0.5">
+                  Nomor tujuan semua tombol Booking WhatsApp, telepon tampilan, sosial media, dan alamat garasi/kantor.
+                </p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shrink-0">
+              Bagian 2
+            </span>
           </div>
 
-          <!-- Nomor Telepon Tampilan -->
-          <div>
-            <label for="phone_number" class={labelClass}>
-              Nomor Telepon Tampilan
-            </label>
-            <div class="relative">
+          <div class="grid sm:grid-cols-2 gap-5">
+            <!-- Nomor WhatsApp CS (Full Width Highlight Box) -->
+            <div class="sm:col-span-2 p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/25 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <label for="whatsapp_number" class="block text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  Nomor WhatsApp CS (Tujuan Utama Booking) <span class="text-rose-500">*</span>
+                </label>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    id="btn-copy-wa"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-400 transition cursor-pointer"
+                  >
+                    <span>📋 Salin Link WA</span>
+                  </button>
+                  <a
+                    id="wa-test-link"
+                    href={`https://wa.me/${currentWa}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                  >
+                    <span>Tes Chat WA</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <div class="flex rounded-xl border border-emerald-500/40 overflow-hidden focus-within:ring-4 focus-within:ring-emerald-500/15 focus-within:border-emerald-500 transition bg-white dark:bg-slate-800">
+                <span class="px-3.5 flex items-center bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-bold border-r border-emerald-500/30 select-none">
+                  wa.me/
+                </span>
+                <input
+                  id="whatsapp_number"
+                  name="whatsapp_number"
+                  type="text"
+                  required
+                  value={currentWa}
+                  placeholder="628xxxxxxxxxx"
+                  class="flex-1 px-3.5 py-2.5 text-sm outline-none bg-transparent text-slate-900 dark:text-white font-mono font-semibold"
+                />
+              </div>
+
+              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                <span>
+                  💡 Jika diketik diawali <code>08...</code> akan otomatis diubah menjadi kode negara <code>628...</code> saat disimpan.
+                </span>
+                <button
+                  type="button"
+                  id="btn-sync-phone"
+                  class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+                >
+                  ↻ Format otomatis ke Telepon Tampilan
+                </button>
+              </div>
+            </div>
+
+            <!-- Nomor Telepon Tampilan -->
+            <div>
+              <label for="phone_number" class={labelClass}>
+                Nomor Telepon Tampilan
+              </label>
               <input
                 id="phone_number"
                 name="phone_number"
                 type="text"
-                value={settings.phone_number || '+62 852-1381-4714'}
+                value={currentPhone}
                 placeholder="+62 852-1381-4714"
                 class={inputClass}
               />
+              <p class="card-subtitle text-[11px] text-slate-500 mt-1">
+                Format rapi dengan spasi/tanda hubung yang tampil di Footer & halaman Kontak.
+              </p>
             </div>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format bebas yang nyaman dibaca pengunjung (tampil di footer & navbar).</p>
-          </div>
 
-          <!-- Email Kantor -->
-          <div>
-            <label for="email_address" class={labelClass}>
-              Alamat Email Kantor
-            </label>
-            <input
-              id="email_address"
-              name="email_address"
-              type="email"
-              value={settings.email_address || 'beyondjogjajourneys@gmail.com'}
-              placeholder="email@domain.com"
-              class={inputClass}
-            />
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Email resmi untuk pertanyaan tamu di halaman Kontak.</p>
-          </div>
-
-          <!-- Link Instagram -->
-          <div>
-            <label for="instagram_url" class={labelClass}>
-              Link Akun Instagram
-            </label>
-            <input
-              id="instagram_url"
-              name="instagram_url"
-              type="url"
-              value={settings.instagram_url || 'https://www.instagram.com/beyondjogja.tours/'}
-              placeholder="https://www.instagram.com/akun"
-              class={inputClass}
-            />
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Tautan profil Instagram yang terpasang pada icon sosial media.</p>
-          </div>
-
-          <!-- Jam Operasional -->
-          <div>
-            <label for="operating_hours" class={labelClass}>
-              Jam Operasional
-            </label>
-            <input
-              id="operating_hours"
-              name="operating_hours"
-              type="text"
-              value={settings.operating_hours || 'Setiap Hari: 07:00 – 22:00 WIB'}
-              placeholder="Setiap Hari: 07:00 – 22:00 WIB"
-              class={inputClass}
-            />
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Waktu kerja customer service dan layanan operasional armada.</p>
-          </div>
-
-          <!-- Alamat Lengkap Kantor -->
-          <div class="sm:col-span-2">
-            <label for="office_address" class={labelClass}>
-              Alamat Lengkap Kantor
-            </label>
-            <textarea
-              id="office_address"
-              name="office_address"
-              rows="3"
-              class={`${inputClass} leading-relaxed`}
-              placeholder="Alamat kantor fisik, ruko, atau garasi armada..."
-            >{settings.office_address || ''}</textarea>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Alamat ini tampil di kartu Informasi Kontak dan footer website.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- SECTION 3: SEO & Google Analytics -->
-      <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-5">
-        <div class="flex items-start gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div class="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center text-lg shrink-0 border border-sky-100 dark:border-sky-800/40">
-            🔍
-          </div>
-          <div>
-            <h2 class="font-bold text-slate-900 dark:text-white text-base">Pengaturan SEO & Google Analytics</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Integrasikan website dengan Google Search Console dan Google Analytics 4 (GA4).</p>
-          </div>
-        </div>
-
-        <div class="space-y-5">
-          <!-- Canonical Domain -->
-          <div>
-            <label for="canonical_site_url" class={labelClass}>
-              URL Domain Resmi (Canonical)
-            </label>
-            <input
-              id="canonical_site_url"
-              name="canonical_site_url"
-              type="url"
-              value={settings.canonical_site_url || 'https://beyondjogjatours.com'}
-              placeholder="https://beyondjogjatours.com"
-              class={inputClass}
-            />
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Domain utama untuk tag canonical, sitemap.xml otomatis, dan Open Graph preview medsos.</p>
-          </div>
-
-          <div class="grid sm:grid-cols-2 gap-5">
-            <!-- GA4 ID -->
+            <!-- Email Kantor -->
             <div>
-              <label for="google_analytics_id" class={labelClass}>
-                Google Analytics 4 (Measurement ID)
+              <label for="email_address" class={labelClass}>
+                Alamat Email Resmi
               </label>
               <input
-                id="google_analytics_id"
-                name="google_analytics_id"
-                type="text"
-                value={settings.google_analytics_id || ''}
-                placeholder="Contoh: G-XXXXXXXXXX"
+                id="email_address"
+                name="email_address"
+                type="email"
+                value={currentEmail}
+                placeholder="beyondjogjajourneys@gmail.com"
                 class={inputClass}
               />
-              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Dapatkan dari Google Analytics (Admin &rarr; Data Streams &rarr; Measurement ID).</p>
+              <p class="card-subtitle text-[11px] text-slate-500 mt-1">
+                Email resmi untuk korespondensi bisnis & mitra wisata.
+              </p>
             </div>
 
-            <!-- Google Search Console -->
+            <!-- Link Instagram -->
             <div>
-              <label for="google_site_verification" class={labelClass}>
-                Google Search Console Verification Code
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="instagram_url" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  URL Profil Instagram
+                </label>
+                <a
+                  id="ig-test-link"
+                  href={currentIg}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-[11px] font-semibold text-primary-600 hover:underline"
+                >
+                  Buka IG ↗
+                </a>
+              </div>
+              <input
+                id="instagram_url"
+                name="instagram_url"
+                type="url"
+                value={currentIg}
+                placeholder="https://www.instagram.com/beyondjogja.tours/"
+                class={inputClass}
+              />
+              <p class="card-subtitle text-[11px] text-slate-500 mt-1">
+                Tautan ke akun Instagram resmi pada tombol sosial media.
+              </p>
+            </div>
+
+            <!-- Jam Operasional + Quick Presets -->
+            <div>
+              <label for="operating_hours" class={labelClass}>
+                Jam Operasional Layanan
               </label>
               <input
-                id="google_site_verification"
-                name="google_site_verification"
+                id="operating_hours"
+                name="operating_hours"
                 type="text"
-                value={settings.google_site_verification || ''}
-                placeholder="Contoh: code_dari_search_console"
+                value={currentHours}
+                placeholder="Setiap Hari: 07:00 – 22:00 WIB"
                 class={inputClass}
               />
-              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Kode verifikasi kepemilikan tag HTML domain pada Google Search Console.</p>
+              <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                <span class="text-[10px] font-semibold text-slate-400">Preset:</span>
+                <button
+                  type="button"
+                  data-hours-preset="Setiap Hari: 07:00 – 22:00 WIB"
+                  class="hours-preset-btn px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary-500/15 hover:text-primary-500 transition cursor-pointer"
+                >
+                  07:00 – 22:00 WIB
+                </button>
+                <button
+                  type="button"
+                  data-hours-preset="Buka 24 Jam (Senin – Minggu)"
+                  class="hours-preset-btn px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary-500/15 hover:text-primary-500 transition cursor-pointer"
+                >
+                  Buka 24 Jam
+                </button>
+                <button
+                  type="button"
+                  data-hours-preset="Setiap Hari: 06:00 – 23:00 WIB"
+                  class="hours-preset-btn px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary-500/15 hover:text-primary-500 transition cursor-pointer"
+                >
+                  06:00 – 23:00 WIB
+                </button>
+              </div>
+            </div>
+
+            <!-- Alamat Lengkap Kantor -->
+            <div class="sm:col-span-2">
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="office_address" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Alamat Lengkap Kantor / Basecamp
+                </label>
+                <a
+                  id="maps-test-link"
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentAddress)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-[11px] font-semibold text-primary-600 hover:underline"
+                >
+                  📍 Cek di Google Maps ↗
+                </a>
+              </div>
+              <textarea
+                id="office_address"
+                name="office_address"
+                rows="3"
+                class={`${inputClass} leading-relaxed`}
+                placeholder="Alamat lengkap basecamp, garasi, atau kantor operasional..."
+              >{currentAddress}</textarea>
+              <p class="card-subtitle text-[11px] text-slate-500 mt-1">
+                Ditampilkan pada bagian Lokasi Basecamp di Beranda, halaman Kontak, dan bagian bawah (Footer).
+              </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Bottom Save Action Bar -->
-      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-center gap-2.5 text-xs text-slate-500 dark:text-slate-400">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Perubahan disimpan secara real-time dan langsung aktif di seluruh website.</span>
+        <!-- SECTION 3: Pengaturan SEO & Google Analytics -->
+        <section id="sec-seo" class="settings-section bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-xs space-y-5">
+          <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
+            <div class="flex items-start gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-xl shrink-0 border border-sky-500/20">
+                🔍
+              </div>
+              <div>
+                <h2 class="card-title font-bold text-slate-900 text-base">Pengaturan SEO & Google Analytics</h2>
+                <p class="card-subtitle text-xs text-slate-500 mt-0.5">
+                  Optimasi indeks pencarian Google, Sitemap otomatis, dan pelacakan trafik pengunjung (GA4).
+                </p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-500 border border-sky-500/20 shrink-0">
+              Bagian 3
+            </span>
+          </div>
+
+          <div class="space-y-5">
+            <!-- Canonical Domain -->
+            <div>
+              <label for="canonical_site_url" class={labelClass}>
+                URL Domain Resmi (Canonical URL)
+              </label>
+              <input
+                id="canonical_site_url"
+                name="canonical_site_url"
+                type="url"
+                value={currentCanonical}
+                placeholder="https://beyondjogjatours.com"
+                class={`${inputClass} font-mono`}
+              />
+              <p class="card-subtitle text-[11px] text-slate-500 mt-1">
+                Digunakan sebagai basis domain pada <code>sitemap.xml</code>, <code>robots.txt</code>, dan Open Graph image share.
+              </p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-5">
+              <!-- GA4 ID -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="google_analytics_id" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Google Analytics 4 (Measurement ID)
+                  </label>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-500 font-semibold">
+                    Format: G-XXXXXXX
+                  </span>
+                </div>
+                <input
+                  id="google_analytics_id"
+                  name="google_analytics_id"
+                  type="text"
+                  value={currentGa}
+                  placeholder="Contoh: G-1234567890"
+                  class={`${inputClass} font-mono uppercase`}
+                />
+                <p class="card-subtitle text-[11px] text-slate-500 mt-1">
+                  Salin dari menu Google Analytics &rarr; Admin &rarr; Data Streams.
+                </p>
+              </div>
+
+              <!-- Google Search Console -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="google_site_verification" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Google Search Console Verification
+                  </label>
+                  <span class="text-[10px] font-semibold text-slate-400">HTML Tag Code</span>
+                </div>
+                <input
+                  id="google_site_verification"
+                  name="google_site_verification"
+                  type="text"
+                  value={currentGsc}
+                  placeholder="Tempel kode atau tag <meta> Search Console"
+                  class={`${inputClass} font-mono`}
+                />
+                <p class="card-subtitle text-[11px] text-slate-500 mt-1">
+                  Bisa langsung tempel kode uniknya atau seluruh tag <code>&lt;meta name="google-site-verification" ...&gt;</code>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: LIVE INTERACTIVE PREVIEWS (4 cols, sticky) -->
+      <div class="lg:col-span-4 space-y-5 lg:sticky lg:top-20">
+
+        <!-- LIVE GOOGLE SERP PREVIEW CARD -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                Live Preview Pencarian Google
+              </h3>
+            </div>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+              SERP Simulasi
+            </span>
+          </div>
+
+          <div class="dashboard-card p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1.5">
+            <div class="flex items-center gap-2">
+              <img src="/logo.png" alt="Favicon" class="w-6 h-6 rounded-full object-contain bg-navy-950 p-0.5" />
+              <div class="min-w-0">
+                <p id="preview-serp-site" class="card-title text-xs font-semibold text-slate-800 truncate">
+                  {currentTitle}
+                </p>
+                <p id="preview-serp-url" class="card-subtitle text-[11px] text-slate-500 truncate">
+                  {currentCanonical}
+                </p>
+              </div>
+            </div>
+            <p id="preview-serp-title" class="text-[15px] font-bold text-sky-500 leading-snug pt-1 line-clamp-2">
+              {currentTitle} — Sewa Mobil & Paket Wisata Jogja
+            </p>
+            <p id="preview-serp-desc" class="card-subtitle text-xs text-slate-600 leading-relaxed line-clamp-3">
+              {currentDesc}
+            </p>
+          </div>
+
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Pratinjau ini otomatis berubah saat Anda mengetik <strong>Nama Website</strong>, <strong>Deskripsi</strong>, atau <strong>Domain Canonical</strong>.
+          </p>
         </div>
-        <button
-          type="submit"
-          class="inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold px-7 py-3 rounded-xl transition shadow-md shadow-primary-600/20 text-sm cursor-pointer active:scale-95"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Simpan Pengaturan</span>
-        </button>
+
+        <!-- LIVE WHATSAPP BOOKING CARD PREVIEW -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                Simulasi Kartu Kontak Publik
+              </h3>
+            </div>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+              Live Sync
+            </span>
+          </div>
+
+          <div class="dashboard-card p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3 text-xs">
+            <div class="flex items-start gap-2.5">
+              <span class="text-base leading-none mt-0.5">📍</span>
+              <div class="min-w-0 flex-1">
+                <p class="card-title font-bold text-slate-800">Basecamp Operasional</p>
+                <p id="preview-card-address" class="card-subtitle text-slate-500 mt-0.5 leading-relaxed line-clamp-3">
+                  {currentAddress}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5">
+              <span class="text-base leading-none mt-0.5">⏰</span>
+              <div class="min-w-0 flex-1">
+                <p class="card-title font-bold text-slate-800">Jam Layanan</p>
+                <p id="preview-card-hours" class="card-subtitle text-slate-500 mt-0.5">
+                  {currentHours}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5">
+              <span class="text-base leading-none mt-0.5">📞</span>
+              <div class="min-w-0 flex-1">
+                <p class="card-title font-bold text-slate-800">Telepon & Email</p>
+                <p id="preview-card-phone" class="card-subtitle text-slate-500 mt-0.5 font-mono">
+                  {currentPhone}
+                </p>
+                <p id="preview-card-email" class="card-subtitle text-slate-500 truncate">
+                  {currentEmail}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tombol Simpan di Sidebar -->
+          <button
+            type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white font-bold px-6 py-3.5 rounded-2xl transition shadow-lg shadow-primary-600/25 text-sm cursor-pointer active:scale-98"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Simpan Semua Pengaturan</span>
+          </button>
+        </div>
+
       </div>
 
     </form>
+
+    <!-- FLOATING UNSAVED CHANGES BAR -->
+    <div
+      id="floating-save-bar"
+      class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 hidden items-center justify-between gap-4 px-5 py-3.5 rounded-2xl bg-navy-950/95 text-white border border-white/15 shadow-2xl backdrop-blur-md w-[92%] max-w-xl"
+    >
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+        <div class="truncate">
+          <p class="text-xs font-bold text-white truncate">Perubahan belum disimpan</p>
+          <p class="text-[11px] text-slate-400 truncate">Klik Simpan agar perubahan langsung tampil di website.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          id="btn-reset-changes"
+          class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+        >
+          Reset
+        </button>
+        <button
+          type="button"
+          id="btn-floating-save"
+          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-primary-500 hover:bg-primary-600 text-white shadow-md transition cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Simpan Sekarang</span>
+        </button>
+      </div>
+    </div>
+
   </div>
 </AdminLayout>
 
 <script is:inline>
-  // Hubungkan tombol simpan di header atas dengan form utama
-  document.getElementById('btn-header-save')?.addEventListener('click', () => {
-    document.getElementById('settings-form')?.requestSubmit();
-  });
+  (() => {
+    const form = document.getElementById('settings-form');
+    const floatingBar = document.getElementById('floating-save-bar');
+    const dirtyIndicator = document.getElementById('dirty-indicator');
 
-  // Pintasan Keyboard Ctrl+S / Cmd+S untuk simpan cepat
-  document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      document.getElementById('settings-form')?.requestSubmit();
-    }
-  });
+    const titleInput = document.getElementById('site_title');
+    const descInput = document.getElementById('site_description');
+    const waInput = document.getElementById('whatsapp_number');
+    const phoneInput = document.getElementById('phone_number');
+    const emailInput = document.getElementById('email_address');
+    const igInput = document.getElementById('instagram_url');
+    const hoursInput = document.getElementById('operating_hours');
+    const addressInput = document.getElementById('office_address');
+    const canonicalInput = document.getElementById('canonical_site_url');
 
-  // Live updater link WhatsApp checker
-  const waInput = document.getElementById('whatsapp_number');
-  const waLink = document.getElementById('wa-test-link');
+    // Elements for live preview & counters
+    const titleCharCount = document.getElementById('title-char-count');
+    const descCharBadge = document.getElementById('desc-char-badge');
+    const waTestLink = document.getElementById('wa-test-link');
+    const statWaDisplay = document.getElementById('stat-wa-display');
+    const statWaLink = document.getElementById('stat-wa-link');
+    const statBrandDisplay = document.getElementById('stat-brand-display');
+    const statDomainDisplay = document.getElementById('stat-domain-display');
+    const igTestLink = document.getElementById('ig-test-link');
+    const mapsTestLink = document.getElementById('maps-test-link');
 
-  waInput?.addEventListener('input', (e) => {
-    const clean = e.target.value.replace(/\D/g, '');
-    if (waLink && clean) {
-      waLink.href = 'https://wa.me/' + clean;
-    }
-  });
+    const previewSerpSite = document.getElementById('preview-serp-site');
+    const previewSerpUrl = document.getElementById('preview-serp-url');
+    const previewSerpTitle = document.getElementById('preview-serp-title');
+    const previewSerpDesc = document.getElementById('preview-serp-desc');
+    const previewCardAddress = document.getElementById('preview-card-address');
+    const previewCardHours = document.getElementById('preview-card-hours');
+    const previewCardPhone = document.getElementById('preview-card-phone');
+    const previewCardEmail = document.getElementById('preview-card-email');
+
+    const markDirty = () => {
+      floatingBar?.classList.remove('hidden');
+      floatingBar?.classList.add('flex');
+      dirtyIndicator?.classList.remove('hidden');
+      dirtyIndicator?.classList.add('inline-flex');
+    };
+
+    const markClean = () => {
+      floatingBar?.classList.add('hidden');
+      floatingBar?.classList.remove('flex');
+      dirtyIndicator?.classList.add('hidden');
+      dirtyIndicator?.classList.remove('inline-flex');
+    };
+
+    const updateDescCounter = (len) => {
+      if (!descCharBadge) return;
+      descCharBadge.textContent = `${len} / 160 karakter`;
+      descCharBadge.className = 'px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold ';
+      if (len >= 110 && len <= 165) {
+        descCharBadge.className += 'bg-emerald-500/15 text-emerald-500';
+      } else if (len > 165) {
+        descCharBadge.className += 'bg-amber-500/15 text-amber-500';
+      } else {
+        descCharBadge.className += 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+      }
+    };
+
+    const syncPreviews = () => {
+      const titleVal = titleInput?.value?.trim() || 'Beyond Jogja Tours';
+      const descVal = descInput?.value?.trim() || 'Jasa Sewa Mobil & Paket Wisata Jogja Terpercaya.';
+      const canonicalVal = canonicalInput?.value?.trim() || 'https://beyondjogjatours.com';
+      let waClean = (waInput?.value || '').replace(/\D/g, '');
+      if (waClean.startsWith('08')) {
+        waClean = '62' + waClean.slice(1);
+      }
+
+      if (titleCharCount) titleCharCount.textContent = `${titleVal.length} karakter`;
+      updateDescCounter(descVal.length);
+
+      if (previewSerpSite) previewSerpSite.textContent = titleVal;
+      if (previewSerpTitle) previewSerpTitle.textContent = `${titleVal} — Sewa Mobil & Paket Wisata Jogja`;
+      if (previewSerpDesc) previewSerpDesc.textContent = descVal;
+      if (previewSerpUrl) previewSerpUrl.textContent = canonicalVal;
+
+      if (statBrandDisplay) statBrandDisplay.textContent = titleVal;
+      if (statDomainDisplay) statDomainDisplay.textContent = canonicalVal.replace(/^https?:\/\//, '');
+
+      if (waClean) {
+        if (waTestLink) waTestLink.href = 'https://wa.me/' + waClean;
+        if (statWaLink) statWaLink.href = 'https://wa.me/' + waClean;
+        if (statWaDisplay) statWaDisplay.textContent = '+' + waClean;
+      }
+
+      if (igTestLink && igInput?.value) {
+        igTestLink.href = igInput.value.trim();
+      }
+      if (mapsTestLink && addressInput?.value) {
+        mapsTestLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addressInput.value.trim());
+      }
+
+      if (previewCardAddress && addressInput) previewCardAddress.textContent = addressInput.value || '-';
+      if (previewCardHours && hoursInput) previewCardHours.textContent = hoursInput.value || '-';
+      if (previewCardPhone && phoneInput) previewCardPhone.textContent = phoneInput.value || '-';
+      if (previewCardEmail && emailInput) previewCardEmail.textContent = emailInput.value || '-';
+    };
+
+    // Listen to all form inputs
+    form?.querySelectorAll('input, textarea').forEach((el) => {
+      el.addEventListener('input', () => {
+        markDirty();
+        syncPreviews();
+      });
+    });
+
+    // Tombol Simpan di Header & Floating Bar
+    document.getElementById('btn-header-save')?.addEventListener('click', () => {
+      form?.requestSubmit();
+    });
+    document.getElementById('btn-floating-save')?.addEventListener('click', () => {
+      form?.requestSubmit();
+    });
+
+    // Tombol Reset Perubahan
+    document.getElementById('btn-reset-changes')?.addEventListener('click', () => {
+      form?.reset();
+      syncPreviews();
+      markClean();
+    });
+
+    // Pintasan Keyboard Ctrl+S / Cmd+S
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        form?.requestSubmit();
+      }
+    });
+
+    // Format otomatis Nomor WA ke Nomor Telepon Tampilan (+62 8xx-xxxx-xxxx)
+    document.getElementById('btn-sync-phone')?.addEventListener('click', () => {
+      if (!waInput || !phoneInput) return;
+      let clean = waInput.value.replace(/\D/g, '');
+      if (clean.startsWith('08')) clean = '62' + clean.slice(1);
+      if (clean.startsWith('62') && clean.length >= 10) {
+        const rest = clean.slice(2);
+        const p1 = rest.slice(0, 3);
+        const p2 = rest.slice(3, 7);
+        const p3 = rest.slice(7);
+        phoneInput.value = `+62 ${p1}-${p2}${p3 ? '-' + p3 : ''}`;
+        markDirty();
+        syncPreviews();
+      }
+    });
+
+    // Salin Link WA
+    const copyWaBtn = document.getElementById('btn-copy-wa');
+    copyWaBtn?.addEventListener('click', async () => {
+      let clean = (waInput?.value || '').replace(/\D/g, '');
+      if (clean.startsWith('08')) clean = '62' + clean.slice(1);
+      const url = 'https://wa.me/' + clean;
+      try {
+        await navigator.clipboard.writeText(url);
+        const orig = copyWaBtn.innerHTML;
+        copyWaBtn.innerHTML = '<span>✓ Link Tersalin!</span>';
+        setTimeout(() => {
+          copyWaBtn.innerHTML = orig;
+        }, 1800);
+      } catch {}
+    });
+
+    // Preset Jam Operasional
+    document.querySelectorAll('.hours-preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const preset = btn.getAttribute('data-hours-preset');
+        if (hoursInput && preset) {
+          hoursInput.value = preset;
+          markDirty();
+          syncPreviews();
+        }
+      });
+    });
+
+    // Filter Tab Bar (Semua / Identitas / Kontak / SEO)
+    const tabBtns = document.querySelectorAll('.settings-tab-btn');
+    const sections = document.querySelectorAll('.settings-section');
+
+    tabBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-tab-target');
+        tabBtns.forEach((b) => {
+          b.classList.remove('bg-primary-600', 'text-white', 'shadow-xs');
+          b.classList.add('text-slate-600');
+        });
+        btn.classList.add('bg-primary-600', 'text-white', 'shadow-xs');
+        btn.classList.remove('text-slate-600');
+
+        sections.forEach((sec) => {
+          if (target === 'all' || sec.id === target) {
+            sec.classList.remove('hidden');
+          } else {
+            sec.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Init counter state on load
+    syncPreviews();
+  })();
 </script>
-

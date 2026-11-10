@@ -37,7 +37,7 @@ if (!flash && saved) {
 
 try {
   cars = await sql`
-    SELECT id, title, slug, thumbnail, badge, price, price_unit, capacity, transmission, features, is_active 
+    SELECT id, title, slug, thumbnail, badge, price, price_unit, capacity, transmission, features 
     FROM cars 
     ORDER BY id DESC;
   `;

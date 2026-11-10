@@ -3,11 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getAllTours } from '../lib/tours';
 import { getAllCars } from '../lib/cars';
 import { getAllTestimonials } from '../lib/testimonials';
+import { getFeaturedGallery } from '../lib/gallery';
 import { getWhatsAppUrl, OFFICE_ADDRESS } from '../lib/constants';
 
 const cars = await getAllCars();
 const tours = (await getAllTours()).filter((t) => t.data.isActive);
 const testimonials = await getAllTestimonials();
+const gallerySlides = await getFeaturedGallery();
 
 const featuredCars = ['all-new-avanza', 'innova-reborn', 'hiace', 'fortuner']
   .map((slug) => cars.find((car) => car.slug.toLowerCase() === slug))
@@ -136,8 +138,82 @@ const featuredTours = tours.slice(0, 3);
     </div>
   </section>
 
+  <!-- ===== PAKET WISATA ===== -->
+  <section id="tours" class="py-24 md:py-32 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16" data-aos="fade-up">
+        <p class="text-primary-600 dark:text-primary-400 font-medium text-xs uppercase tracking-[0.15em] mb-3">Jalan-jalan Seru</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-display transition-colors">Paket Wisata Pilihan</h2>
+        <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-sm leading-relaxed transition-colors">Dari Candi Borobudur sampai pantai selatan Jogja — pilih paket yang paling sesuai sama selera kamu.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {featuredTours.map((tour, index) => (
+          <div data-aos="fade-up" data-aos-delay={index * 100} class="tilt-card bg-white dark:bg-navy-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-white/8 hover:border-primary-200 dark:hover:border-primary-500/20 shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col">
+            <a href={`/tour-package/${tour.slug}`} class="h-52 overflow-hidden relative shrink-0 block">
+              <img src={tour.data.thumbnail} alt={tour.data.title} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+              <h3 class="absolute bottom-4 left-5 right-5 text-white text-base font-semibold group-hover:text-primary-300 transition-colors">{tour.data.title}</h3>
+            </a>
+            <div class="p-6 flex flex-col flex-grow">
+              <p class="text-slate-500 dark:text-slate-400 text-sm mb-5 line-clamp-2 leading-relaxed transition-colors">{tour.data.tagline}</p>
+
+              {(tour.slug.toLowerCase().includes('borobudur') || tour.slug.toLowerCase().includes('prambanan')) && (
+                <div class="mb-4 pt-3 border-t border-slate-100 dark:border-white/8">
+                  <p class="text-[10px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-2">Pesan via GetYourGuide:</p>
+                  <a
+                    href="https://www.getyourguide.com/yogyakarta-l349/borobudur-sunrise-prambanan-sunset-its-hidden-temples-t1505636/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="transition-transform duration-200 hover:scale-[1.02] inline-block shadow-sm rounded-lg overflow-hidden"
+                  >
+                    <div style="position: relative; width: fit-content">
+                      <img src="https://gyg.me/pQw3KK9K" width="160px" height="auto" style="border: 1px solid #c6c8d0" class="rounded-lg" alt="GetYourGuide | Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples"/>
+                      <p style="position: absolute; font-size: 0.5rem; font-weight: 500; color: #000000; font-family: Arial, sans-serif; z-index: 10; margin: 0 auto; right: 0.2rem; top: 0.2rem; width: 60%; line-height: 1.1;">
+                        Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples
+                      </p>
+                    </div>
+                  </a>
+                </div>
+              )}
+
+              <div class="flex gap-3 mt-auto">
+                <a
+                  href={`/tour-package/${tour.slug}`}
+                  class="flex-1 flex items-center justify-center gap-1.5 border border-primary-300 dark:border-primary-500/40 text-primary-600 dark:text-primary-400 py-2.5 rounded-lg font-medium text-xs hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors"
+                >
+                  <span>Detail</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+                <a
+                  href={getWhatsAppUrl(tour.data.whatsappMessage)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex-1 text-center bg-primary-600 text-white py-2.5 rounded-lg font-medium text-xs hover:bg-primary-700 transition-colors"
+                >
+                  Contact Us Now
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="text-center mt-14">
+        <a href="/tour-package" class="inline-flex items-center gap-2 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-medium text-sm px-8 py-3.5 rounded-xl hover:border-primary-400 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400 transition-all">
+          Lihat Semua Paket Wisata
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== ARMADA MOBIL ===== -->
-  <section id="cars" class="py-24 md:py-32 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
+  <section id="cars" class="py-24 md:py-32 bg-white dark:bg-navy-900/40 transition-colors duration-300">
     <div class="container mx-auto px-4">
       <div class="flex flex-col md:flex-row justify-between items-end mb-14 gap-4" data-aos="fade-up">
         <div>
@@ -151,8 +227,8 @@ const featuredTours = tours.slice(0, 3);
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {featuredCars.map((car, index) => (
-          <div data-aos="fade-up" data-aos-delay={index * 100} class="tilt-card bg-white dark:bg-navy-900 rounded-2xl border border-slate-100 dark:border-white/8 hover:border-primary-200 dark:hover:border-primary-500/20 shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden">
-            <div class="bg-slate-50 dark:bg-navy-800/50 p-6 flex items-center justify-center h-52 overflow-hidden transition-colors">
+          <div data-aos="fade-up" data-aos-delay={index * 100} class="tilt-card bg-slate-50/80 dark:bg-navy-900 rounded-2xl border border-slate-100 dark:border-white/8 hover:border-primary-200 dark:hover:border-primary-500/20 shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden">
+            <div class="bg-white dark:bg-navy-800/50 p-6 flex items-center justify-center h-52 overflow-hidden transition-colors">
               <img src={car.data.thumbnail} alt={car.data.title} class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </div>
             <div class="p-6">
@@ -194,87 +270,84 @@ const featuredTours = tours.slice(0, 3);
     </div>
   </section>
 
-  <!-- ===== PAKET WISATA ===== -->
-  <section id="tours" class="py-24 md:py-32 bg-white dark:bg-navy-950 transition-colors duration-300">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-16" data-aos="fade-up">
-        <p class="text-primary-600 dark:text-primary-400 font-medium text-xs uppercase tracking-[0.15em] mb-3">Jalan-jalan Seru</p>
-        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-display transition-colors">Paket Wisata Pilihan</h2>
-        <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-sm leading-relaxed transition-colors">Dari Candi Borobudur sampai pantai selatan Jogja — pilih paket yang paling sesuai sama selera kamu.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {featuredTours.map((tour, index) => (
-          <div data-aos="fade-up" data-aos-delay={index * 100} class="tilt-card bg-white dark:bg-navy-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-white/8 hover:border-primary-200 dark:hover:border-primary-500/20 shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col">
-            <div class="h-52 overflow-hidden relative shrink-0">
-              <img src={tour.data.thumbnail} alt={tour.data.title} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-              <h3 class="absolute bottom-4 left-5 right-5 text-white text-base font-semibold">{tour.data.title}</h3>
-            </div>
-            <div class="p-6 flex flex-col flex-grow">
-              <p class="text-slate-500 dark:text-slate-400 text-sm mb-5 line-clamp-2 leading-relaxed transition-colors">{tour.data.tagline}</p>
-
-              <!-- Expandable Detail -->
-              <div id={`home-detail-${tour.slug}`} class="home-detail-content hidden mb-5">
-                <div class="border-t border-slate-100 dark:border-white/8 pt-4 transition-colors">
-                  <div class="prose prose-sm max-w-none text-slate-600 dark:text-slate-300 prose-headings:text-slate-900 dark:prose-headings:text-white prose-headings:font-semibold transition-colors" set:html={tour.htmlContent} />
-                </div>
-              </div>
-
-              {(tour.slug.toLowerCase().includes('borobudur') || tour.slug.toLowerCase().includes('prambanan')) && (
-                <div class="mb-4 pt-3 border-t border-slate-100 dark:border-white/8">
-                  <p class="text-[10px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-2">Pesan via GetYourGuide:</p>
-                  <a
-                    href="https://www.getyourguide.com/yogyakarta-l349/borobudur-sunrise-prambanan-sunset-its-hidden-temples-t1505636/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="transition-transform duration-200 hover:scale-[1.02] inline-block shadow-sm rounded-lg overflow-hidden"
-                  >
-                    <div style="position: relative; width: fit-content">
-                      <img src="https://gyg.me/pQw3KK9K" width="160px" height="auto" style="border: 1px solid #c6c8d0" class="rounded-lg" alt="GetYourGuide | Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples"/>
-                      <p style="position: absolute; font-size: 0.5rem; font-weight: 500; color: #000000; font-family: Arial, sans-serif; z-index: 10; margin: 0 auto; right: 0.2rem; top: 0.2rem; width: 60%; line-height: 1.1;">
-                        Borobudur Sunrise, Prambanan Sunset & Its Hidden Temples
-                      </p>
-                    </div>
-                  </a>
-                </div>
-              )}
-
-              <div class="flex gap-3 mt-auto">
-                <button
-                  type="button"
-                  data-target={`home-detail-${tour.slug}`}
-                  class="home-detail-btn flex-1 flex items-center justify-center gap-1.5 border border-primary-300 dark:border-primary-500/40 text-primary-600 dark:text-primary-400 py-2.5 rounded-lg font-medium text-xs hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 arrow-icon transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="btn-label">Detail</span>
-                </button>
-                <a
-                  href={getWhatsAppUrl(tour.data.whatsappMessage)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="flex-1 text-center bg-primary-600 text-white py-2.5 rounded-lg font-medium text-xs hover:bg-primary-700 transition-colors"
-                >
-                  Contact Us Now
-                </a>
-              </div>
-            </div>
+  <!-- ===== DOKUMENTASI / GALERI SLIDER ===== -->
+  {gallerySlides.length > 0 && (
+    <section id="gallery-slider" class="py-24 md:py-32 bg-slate-50 dark:bg-navy-950 transition-colors duration-300 overflow-hidden">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-4" data-aos="fade-up">
+          <div>
+            <p class="text-primary-600 dark:text-primary-400 font-medium text-xs uppercase tracking-[0.15em] mb-2">Dokumentasi Momen Seru</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-display transition-colors">Liburan Seru Bareng Kami</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-xl leading-relaxed">
+              Intip keseruan wisatawan domestik & mancanegara yang menjelajahi keindahan Yogyakarta bersama Beyond Jogja.
+            </p>
           </div>
-        ))}
-      </div>
+          
+          <div class="flex items-center gap-3">
+            <!-- Prev/Next Navigation Buttons -->
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                id="slider-prev"
+                aria-label="Foto Sebelumnya"
+                class="w-10 h-10 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-400 flex items-center justify-center transition shadow-xs cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button
+                type="button"
+                id="slider-next"
+                aria-label="Foto Berikutnya"
+                class="w-10 h-10 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-400 flex items-center justify-center transition shadow-xs cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
 
-      <div class="text-center mt-14">
-        <a href="/tour-package" class="inline-flex items-center gap-2 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-medium text-sm px-8 py-3.5 rounded-xl hover:border-primary-400 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400 transition-all">
-          Lihat Semua Paket Wisata
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </a>
+            <a href="/galeri" class="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 border border-primary-200/60 dark:border-primary-800/60 hover:bg-primary-100 transition shadow-xs ml-2">
+              <span>Lihat Semua Galeri</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Carousel Viewport & Track -->
+        <div id="slider-viewport" class="relative overflow-hidden cursor-grab active:cursor-grabbing select-none rounded-3xl" data-aos="fade-up">
+          <div id="slider-track" class="flex transition-transform duration-500 ease-out gap-5">
+            {gallerySlides.map((slide) => (
+              <a
+                href="/galeri"
+                class="slider-item shrink-0 w-[82%] sm:w-[46%] lg:w-[31.5%] aspect-[4/3] rounded-2xl overflow-hidden relative group bg-slate-200 dark:bg-navy-900 border border-slate-100 dark:border-white/10 shadow-sm block"
+              >
+                <img
+                  src={slide.image_url}
+                  alt={slide.title}
+                  loading="lazy"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+                  onerror="this.src='https://placehold.co/800x600?text=Dokumentasi+Jogja'"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950/85 via-navy-950/20 to-transparent flex flex-col justify-between p-4 sm:p-5 pointer-events-none">
+                  <div class="flex justify-between items-start">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/60 backdrop-blur-sm text-white shadow-xs">
+                      {slide.category || 'Wisata'}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 class="text-white font-bold text-sm sm:text-base leading-snug drop-shadow-sm group-hover:text-primary-200 transition-colors line-clamp-2">
+                      {slide.title}
+                    </h3>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Dot Indicators -->
+        <div id="slider-dots" class="flex items-center justify-center gap-2 mt-8"></div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <!-- ===== KEUNGGULAN ===== -->
   <section class="py-24 md:py-32 bg-navy-950">
@@ -396,24 +469,7 @@ const featuredTours = tours.slice(0, 3);
 
 <script>
   function initHomePage() {
-    // 1. Tour Detail Toggle
-    document.querySelectorAll<HTMLButtonElement>('.home-detail-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const targetId = btn.dataset.target!;
-        const panel    = document.getElementById(targetId);
-        const arrow    = btn.querySelector<SVGElement>('.arrow-icon');
-        const label    = btn.querySelector<HTMLSpanElement>('.btn-label');
-        if (!panel) return;
-        const isOpen = !panel.classList.contains('hidden');
-        panel.classList.toggle('hidden', isOpen);
-        arrow?.classList.toggle('rotate-180', !isOpen);
-        if (label) label.textContent = isOpen ? 'Detail' : 'Tutup';
-        btn.classList.toggle('bg-primary-50', !isOpen);
-        btn.classList.toggle('dark:bg-primary-500/10', !isOpen);
-      });
-    });
-
-    // 2. Number Counter Animation
+    // 1. Number Counter Animation
     const counters = document.querySelectorAll('.counter-number');
     const observerOptions = { threshold: 0.1 };
     
@@ -443,6 +499,135 @@ const featuredTours = tours.slice(0, 3);
     }, observerOptions);
     
     counters.forEach(counter => observer.observe(counter));
+
+    // 2. Gallery Carousel Auto-Slide & Touch Swipe
+    const track = document.getElementById('slider-track');
+    const viewport = document.getElementById('slider-viewport');
+    const prevBtn = document.getElementById('slider-prev');
+    const nextBtn = document.getElementById('slider-next');
+    const dotsContainer = document.getElementById('slider-dots');
+
+    if (track && viewport) {
+      const items = track.querySelectorAll<HTMLElement>('.slider-item');
+      if (items.length > 0) {
+        let currentIndex = 0;
+        let autoPlayTimer: any = null;
+        let startX = 0;
+        let isDragging = false;
+
+        const getItemsPerView = () => {
+          if (window.innerWidth >= 1024) return 3;
+          if (window.innerWidth >= 640) return 2;
+          return 1;
+        };
+
+        const maxIndex = () => Math.max(0, items.length - getItemsPerView());
+
+        function renderDots() {
+          if (!dotsContainer) return;
+          dotsContainer.innerHTML = '';
+          const count = maxIndex() + 1;
+          if (count <= 1) return;
+          for (let i = 0; i < count; i++) {
+            const dot = document.createElement('button');
+            dot.className = `h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+              i === currentIndex ? 'w-7 bg-primary-600' : 'w-2.5 bg-slate-300 dark:bg-white/20'
+            }`;
+            dot.setAttribute('aria-label', `Pindah ke slide ${i + 1}`);
+            dot.addEventListener('click', () => {
+              goToSlide(i);
+              resetAutoPlay();
+            });
+            dotsContainer.appendChild(dot);
+          }
+        }
+
+        function updateDots() {
+          if (!dotsContainer) return;
+          const dots = dotsContainer.children;
+          for (let i = 0; i < dots.length; i++) {
+            (dots[i] as HTMLElement).className = `h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+              i === currentIndex ? 'w-7 bg-primary-600' : 'w-2.5 bg-slate-300 dark:bg-white/20'
+            }`;
+          }
+        }
+
+        function goToSlide(index: number) {
+          const limit = maxIndex();
+          if (index < 0) index = limit;
+          if (index > limit) index = 0;
+          currentIndex = index;
+
+          const firstItem = items[0];
+          const gap = 20;
+          const itemWidth = firstItem.offsetWidth + gap;
+          track.style.transform = `translateX(-${currentIndex * itemWidth}px)`;
+          updateDots();
+        }
+
+        function nextSlide() {
+          goToSlide(currentIndex + 1);
+        }
+
+        function prevSlide() {
+          goToSlide(currentIndex - 1);
+        }
+
+        function startAutoPlay() {
+          stopAutoPlay();
+          autoPlayTimer = setInterval(nextSlide, 3500);
+        }
+
+        function stopAutoPlay() {
+          if (autoPlayTimer) clearInterval(autoPlayTimer);
+        }
+
+        function resetAutoPlay() {
+          stopAutoPlay();
+          startAutoPlay();
+        }
+
+        prevBtn?.addEventListener('click', () => {
+          prevSlide();
+          resetAutoPlay();
+        });
+
+        nextBtn?.addEventListener('click', () => {
+          nextSlide();
+          resetAutoPlay();
+        });
+
+        viewport.addEventListener('mouseenter', stopAutoPlay);
+        viewport.addEventListener('mouseleave', startAutoPlay);
+
+        // Touch Swipe
+        viewport.addEventListener('touchstart', (e) => {
+          stopAutoPlay();
+          startX = e.touches[0].clientX;
+          isDragging = true;
+        }, { passive: true });
+
+        viewport.addEventListener('touchend', (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          const endX = e.changedTouches[0].clientX;
+          const diff = startX - endX;
+          if (Math.abs(diff) > 40) {
+            if (diff > 0) nextSlide();
+            else prevSlide();
+          }
+          startAutoPlay();
+        });
+
+        window.addEventListener('resize', () => {
+          renderDots();
+          goToSlide(currentIndex);
+        });
+
+        renderDots();
+        startAutoPlay();
+      }
+    }
   }
 
   if (document.readyState === 'loading') {
