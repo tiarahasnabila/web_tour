@@ -28,7 +28,9 @@ if (tour) {
   waBookingUrl = formatWhatsAppUrl(settings.whatsapp_number, waBookingMessage);
   waCustomUrl = formatWhatsAppUrl(settings.whatsapp_number, `Halo Beyond Jogja Tours! Saya tertarik dengan ${tour.data.title}, tapi ingin konsultasi custom rute/destinasinya.`);
 
-  images = tour.data.gallery && tour.data.gallery.length > 0 ? tour.data.gallery : [tour.data.thumbnail];
+  const rawGallery = Array.isArray(tour.data.gallery) ? tour.data.gallery : [];
+  const uniqueImages = Array.from(new Set([tour.data.thumbnail, ...rawGallery].filter(Boolean)));
+  images = uniqueImages.length > 0 ? uniqueImages : [tour.data.thumbnail];
   mainImage = images[0];
   subImage1 = images[1] || images[0];
   subImage2 = images[2] || images[0];
@@ -170,44 +172,81 @@ if (tour) {
     <section class="py-8 md:py-12 bg-slate-50 dark:bg-navy-950 transition-colors duration-300">
       <div class="container mx-auto px-4 max-w-7xl">
         
-        <!-- GYG Photo Gallery Mosaic -->
+        <!-- GYG Photo Gallery Mosaic with Interactive Lightbox Triggers -->
         <div class="mb-10 rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-navy-900">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2 p-2">
             <!-- Main Big Image -->
-            <div class="md:col-span-2 h-72 sm:h-96 md:h-[440px] rounded-xl overflow-hidden relative group">
+            <div
+              class="md:col-span-2 h-72 sm:h-96 md:h-[440px] rounded-xl overflow-hidden relative group cursor-pointer"
+              data-gallery-trigger="0"
+              title="Klik untuk melihat foto lebih besar"
+            >
               <img 
                 src={mainImage} 
                 alt={tour.data.title} 
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 onerror="this.src='https://placehold.co/800x600?text=Foto+Wisata'"
               />
-              <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors pointer-events-none"></div>
+              
+              <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 pointer-events-none">
                 <span>📷 Destinasi Utama</span>
               </div>
+
+              <!-- Tombol Lihat Foto untuk Tampilan Mobile / Tablet -->
+              <button
+                type="button"
+                data-gallery-trigger="0"
+                class="md:hidden absolute bottom-3 right-3 bg-black/75 hover:bg-black/90 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg ring-1 ring-white/20 active:scale-95 transition cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Lihat {images.length} Foto</span>
+              </button>
             </div>
 
-            <!-- Stacked Side Images -->
+            <!-- Stacked Side Images (Desktop) -->
             <div class="hidden md:flex flex-col gap-2 h-[440px]">
-              <div class="h-1/2 rounded-xl overflow-hidden relative group">
+              <div
+                class="h-1/2 rounded-xl overflow-hidden relative group cursor-pointer"
+                data-gallery-trigger="1"
+                title="Klik untuk membuka galeri foto"
+              >
                 <img 
                   src={subImage1} 
                   alt={`${tour.data.title} galeri 1`} 
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   onerror="this.src='https://placehold.co/600x400?text=Foto+2'"
                 />
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors pointer-events-none"></div>
               </div>
-              <div class="h-1/2 rounded-xl overflow-hidden relative group">
+
+              <div
+                class="h-1/2 rounded-xl overflow-hidden relative group cursor-pointer"
+                data-gallery-trigger="2"
+                title="Klik untuk membuka galeri foto"
+              >
                 <img 
                   src={subImage2} 
                   alt={`${tour.data.title} galeri 2`} 
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   onerror="this.src='https://placehold.co/600x400?text=Foto+3'"
                 />
-                <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
-                  <span class="bg-black/75 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
-                    Lihat {images.length} Foto
+                <!-- Tombol View Photos / Lihat Semua Foto -->
+                <button
+                  type="button"
+                  data-gallery-trigger="2"
+                  class="absolute inset-0 bg-black/35 hover:bg-black/55 backdrop-blur-[1px] flex items-center justify-center transition cursor-pointer group/btn"
+                  aria-label={`Buka galeri ${images.length} foto`}
+                >
+                  <span class="bg-black/80 group-hover/btn:bg-black/95 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-2xl ring-1 ring-white/25 group-hover/btn:scale-105 transition-transform">
+                    <svg class="w-4 h-4 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Lihat {images.length} Foto</span>
                   </span>
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -521,5 +560,202 @@ if (tour) {
         <span>Pesan via WA</span>
       </a>
     </div>
+
+    <!-- Gallery Lightbox Modal -->
+    <div
+      id="gallery-modal"
+      class="fixed inset-0 z-50 hidden bg-black/95 backdrop-blur-md flex flex-col justify-between transition-opacity duration-300 opacity-0"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Galeri Foto Wisata"
+    >
+      <!-- Top Bar: Title, Counter & Close Button -->
+      <div class="px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between border-b border-white/10 shrink-0 bg-black/40">
+        <div class="min-w-0 pr-4">
+          <p class="text-white font-bold text-sm sm:text-base truncate">{tour.data.title}</p>
+          <p id="gallery-counter" class="text-xs text-slate-400 font-mono mt-0.5">
+            Foto 1 dari {images.length}
+          </p>
+        </div>
+        <button
+          type="button"
+          id="gallery-close-btn"
+          class="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer flex items-center justify-center shrink-0 active:scale-95"
+          aria-label="Tutup Galeri"
+          title="Tutup (Esc)"
+        >
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Main Viewer Area (with Prev & Next Buttons) -->
+      <div class="relative flex-1 flex items-center justify-center p-3 sm:p-6 overflow-hidden select-none">
+        <!-- Prev Button -->
+        <button
+          type="button"
+          id="gallery-prev-btn"
+          class="absolute left-3 sm:left-6 z-10 p-3 sm:p-3.5 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+          aria-label="Foto Sebelumnya"
+          title="Sebelumnya (Panah Kiri)"
+        >
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <!-- Current Active Image Container -->
+        <div class="max-w-5xl max-h-[65vh] sm:max-h-[72vh] w-full h-full flex items-center justify-center p-2">
+          <img
+            id="gallery-active-img"
+            src={mainImage}
+            alt={tour.data.title}
+            class="max-w-full max-h-full object-contain rounded-xl sm:rounded-2xl shadow-2xl transition-all duration-200"
+          />
+        </div>
+
+        <!-- Next Button -->
+        <button
+          type="button"
+          id="gallery-next-btn"
+          class="absolute right-3 sm:right-6 z-10 p-3 sm:p-3.5 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+          aria-label="Foto Berikutnya"
+          title="Berikutnya (Panah Kanan)"
+        >
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Bottom Thumbnail Carousel -->
+      <div class="px-4 py-3 sm:px-6 sm:py-4 border-t border-white/10 shrink-0 bg-black/40 overflow-x-auto">
+        <div class="flex items-center justify-center gap-2 sm:gap-3 min-w-max mx-auto" id="gallery-thumbs">
+          {images.map((img, idx) => (
+            <button
+              type="button"
+              data-thumb-index={idx}
+              class={`w-14 h-11 sm:w-20 sm:h-14 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${idx === 0 ? 'border-primary-400 scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`}
+              title={`Lihat foto ${idx + 1}`}
+            >
+              <img src={img} alt={`Thumbnail ${idx + 1}`} class="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Script Lightbox Modal -->
+    <script define:vars={{ galleryImages: images }}>
+      (function () {
+        const modal = document.getElementById('gallery-modal');
+        const activeImg = document.getElementById('gallery-active-img');
+        const counter = document.getElementById('gallery-counter');
+        const prevBtn = document.getElementById('gallery-prev-btn');
+        const nextBtn = document.getElementById('gallery-next-btn');
+        const closeBtn = document.getElementById('gallery-close-btn');
+        const thumbBtns = document.querySelectorAll('[data-thumb-index]');
+        const triggers = document.querySelectorAll('[data-gallery-trigger]');
+
+        if (!modal || !activeImg || !galleryImages || galleryImages.length === 0) return;
+
+        let currentIndex = 0;
+        const total = galleryImages.length;
+
+        function updateGalleryUI(idx) {
+          currentIndex = (idx + total) % total;
+          activeImg.src = galleryImages[currentIndex];
+          if (counter) {
+            counter.textContent = `Foto ${currentIndex + 1} dari ${total}`;
+          }
+          thumbBtns.forEach((tb, i) => {
+            if (i === currentIndex) {
+              tb.classList.add('border-primary-400', 'scale-105', 'shadow-md');
+              tb.classList.remove('border-transparent', 'opacity-60');
+              tb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            } else {
+              tb.classList.remove('border-primary-400', 'scale-105', 'shadow-md');
+              tb.classList.add('border-transparent', 'opacity-60');
+            }
+          });
+        }
+
+        function openGallery(startIdx = 0) {
+          updateGalleryUI(startIdx);
+          modal.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            modal.classList.remove('opacity-0');
+            modal.classList.add('opacity-100');
+          });
+          document.body.style.overflow = 'hidden';
+        }
+
+        function closeGallery() {
+          modal.classList.remove('opacity-100');
+          modal.classList.add('opacity-0');
+          setTimeout(() => {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+          }, 250);
+        }
+
+        triggers.forEach((el) => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(el.getAttribute('data-gallery-trigger') || '0', 10);
+            openGallery(isNaN(idx) ? 0 : idx);
+          });
+        });
+
+        closeBtn?.addEventListener('click', closeGallery);
+
+        prevBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateGalleryUI(currentIndex - 1);
+        });
+
+        nextBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateGalleryUI(currentIndex + 1);
+        });
+
+        thumbBtns.forEach((tb) => {
+          tb.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(tb.getAttribute('data-thumb-index') || '0', 10);
+            updateGalleryUI(idx);
+          });
+        });
+
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal || e.target.id === 'gallery-modal') {
+            closeGallery();
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (modal.classList.contains('hidden')) return;
+          if (e.key === 'Escape') closeGallery();
+          if (e.key === 'ArrowLeft') updateGalleryUI(currentIndex - 1);
+          if (e.key === 'ArrowRight') updateGalleryUI(currentIndex + 1);
+        });
+
+        // Touch swipe gesture support for mobile
+        let touchStartX = 0;
+        modal.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        modal.addEventListener('touchend', (e) => {
+          const touchEndX = e.changedTouches[0].screenX;
+          if (touchStartX - touchEndX > 50) {
+            updateGalleryUI(currentIndex + 1);
+          } else if (touchEndX - touchStartX > 50) {
+            updateGalleryUI(currentIndex - 1);
+          }
+        }, { passive: true });
+      })();
+    </script>
   </BaseLayout>
 )}
