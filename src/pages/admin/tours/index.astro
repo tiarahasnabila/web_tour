@@ -36,10 +36,14 @@ if (!flash && Astro.url.searchParams.get('saved')) {
 }
 
 try {
-  tours = await sql`SELECT * FROM tours ORDER BY id DESC;`;
+  tours = await sql`
+    SELECT id, title, slug, thumbnail, is_active, badge, price, price_unit, duration, location, tagline 
+    FROM tours 
+    ORDER BY id DESC;
+  `;
 } catch (err: any) {
   console.error('Fetch error:', err);
-  flash = { type: 'error', text: 'Gagal memuat data dari database.' };
+  flash = { type: 'error', text: 'Gagal memuat data dari database: ' + (err?.message || 'Koneksi terputus') };
 }
 ---
 

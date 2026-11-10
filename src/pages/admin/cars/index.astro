@@ -36,10 +36,14 @@ if (!flash && saved) {
 }
 
 try {
-  cars = await sql`SELECT * FROM cars ORDER BY id DESC;`;
+  cars = await sql`
+    SELECT id, title, slug, thumbnail, badge, price, price_unit, capacity, transmission, features, is_active 
+    FROM cars 
+    ORDER BY id DESC;
+  `;
 } catch (err: any) {
   console.error('Fetch error:', err);
-  flash = { type: 'error', text: 'Gagal memuat data dari database.' };
+  flash = { type: 'error', text: 'Gagal memuat data dari database: ' + (err?.message || 'Koneksi terputus') };
 }
 ---
 
