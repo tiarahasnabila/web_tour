@@ -26,6 +26,36 @@ if (Astro.request.method === 'POST') {
       await sql`UPDATE gallery SET is_featured = NOT COALESCE(is_featured, true) WHERE id = ${Number(id)};`;
       invalidateGalleryCache();
       return Astro.redirect('/admin/gallery?toggled=1');
+    } else if (action === 'rename_category') {
+      // UBAH NAMA KATEGORI
+      const oldCategory = formData.get('old_category')?.toString().trim();
+      const newCategory = formData.get('new_category')?.toString().trim();
+      if (oldCategory && newCategory && oldCategory !== newCategory) {
+        await sql`
+          UPDATE gallery
+          SET category = ${newCategory}
+          WHERE category = ${oldCategory};
+        `;
+        invalidateGalleryCache();
+        return Astro.redirect(
+          `/admin/gallery?cat_renamed=1&old=${encodeURIComponent(oldCategory)}&new=${encodeURIComponent(newCategory)}`
+        );
+      }
+    } else if (action === 'delete_category') {
+      // HAPUS KATEGORI (Foto dialihkan ke 'Wisata' atau dihapus)
+      const targetCategory = formData.get('target_category')?.toString().trim();
+      const deleteMode = formData.get('delete_mode')?.toString() || 'reassign'; // 'reassign' | 'delete_photos'
+      if (targetCategory) {
+        if (deleteMode === 'delete_photos') {
+          await sql`DELETE FROM gallery WHERE category = ${targetCategory};`;
+        } else {
+          await sql`UPDATE gallery SET category = 'Wisata' WHERE category = ${targetCategory};`;
+        }
+        invalidateGalleryCache();
+        return Astro.redirect(
+          `/admin/gallery?cat_deleted=1&cat=${encodeURIComponent(targetCategory)}&mode=${deleteMode}`
+        );
+      }
     } else if (action === 'batch_save') {
       // UPLOAD BANYAK FOTO SEKALIGUS PER KATEGORI
       const batchJson = formData.get('batch_data')?.toString() || '[]';
@@ -101,9 +131,27 @@ const savedParam = urlParam.get('saved');
 const toggledParam = urlParam.get('toggled');
 const batchSavedParam = urlParam.get('batch_saved');
 const catParam = urlParam.get('cat');
+const catRenamedParam = urlParam.get('cat_renamed');
+const catDeletedParam = urlParam.get('cat_deleted');
+const oldParam = urlParam.get('old');
+const newParam = urlParam.get('new');
+const deleteModeParam = urlParam.get('mode');
 
 if (!flash) {
-  if (batchSavedParam) {
+  if (catRenamedParam) {
+    flash = {
+      type: 'success',
+      text: `✏️ Nama kategori "${oldParam}" berhasil diubah menjadi "${newParam}".`,
+    };
+  } else if (catDeletedParam) {
+    flash = {
+      type: 'success',
+      text:
+        deleteModeParam === 'delete_photos'
+          ? `🗑️ Kategori "${catParam}" beserta seluruh fotonya berhasil dihapus permanen.`
+          : `🗑️ Kategori "${catParam}" berhasil dihapus (seluruh foto telah dialihkan ke kategori "Wisata").`,
+    };
+  } else if (batchSavedParam) {
     flash = {
       type: 'success',
       text: `🎉 Berhasil mengunggah ${batchSavedParam} foto sekaligus ke kategori "${catParam || 'Wisata'}"!`,
@@ -120,13 +168,30 @@ if (!flash) {
 const items: GalleryItem[] = await getAllGallery();
 const featuredCount = items.filter((i) => i.is_featured).length;
 
-// Ambil daftar kategori unik beserta jumlah fotonya
+// Ambil semua kategori dari database + kategori default agar selalu lengkap
+const defaultCategories = ['Candi', 'Petualangan', 'Pantai', 'Budaya', 'Armada', 'Wisata'];
+const dbCategories = Array.from(new Set(items.map((i) => (i.category || '').trim()).filter(Boolean)));
+const allCategories = Array.from(new Set([...defaultCategories, ...dbCategories]));
+
+// Hitung jumlah per kategori aktual
 const categoryCounts: Record<string, number> = {};
 items.forEach((i) => {
   const c = i.category || 'Wisata';
   categoryCounts[c] = (categoryCounts[c] || 0) + 1;
 });
 const categories = Object.keys(categoryCounts);
+
+const getCatEmoji = (cat: string) => {
+  const c = cat.toLowerCase();
+  if (c.includes('candi') || c.includes('temple')) return '⛩️';
+  if (c.includes('petualang') || c.includes('adventure') || c.includes('jeep')) return '🚙';
+  if (c.includes('pantai') || c.includes('beach') || c.includes('laut')) return '🏖️';
+  if (c.includes('budaya') || c.includes('culture') || c.includes('kraton') || c.includes('malioboro')) return '🏛️';
+  if (c.includes('armada') || c.includes('mobil') || c.includes('car') || c.includes('driver')) return '🚐';
+  if (c.includes('alam') || c.includes('nature') || c.includes('gunung')) return '🌄';
+  if (c.includes('kuliner') || c.includes('food')) return '🍲';
+  return '📸';
+};
 ---
 
 <AdminLayout title="Kelola Galeri" active="gallery">
@@ -244,7 +309,7 @@ const categories = Object.keys(categoryCounts);
       </div>
     </div>
 
-    <!-- CATEGORY FILTER PILLS & SEARCH BAR -->
+    <!-- CATEGORY FILTER PILLS & TOOLBAR (DENGAN TOMBOL KELOLA KATEGORI) -->
     <div class="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-3">
       <!-- Filter Pills -->
       <div class="flex flex-wrap items-center gap-1.5" id="category-filter-bar">
@@ -271,8 +336,22 @@ const categories = Object.keys(categoryCounts);
         ))}
       </div>
 
-      <!-- Quick Action + Single Add Button -->
-      <div class="flex items-center gap-2">
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- TOMBOL KELOLA KATEGORI (EDIT NAMA / HAPUS) -->
+        <button
+          type="button"
+          id="btn-manage-categories"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700 transition cursor-pointer"
+          title="Ubah nama atau hapus kategori"
+        >
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span>Kelola Kategori</span>
+        </button>
+
         <button
           type="button"
           id="btn-open-single"
@@ -407,21 +486,21 @@ const categories = Object.keys(categoryCounts);
   <!-- ========================================================================= -->
   <div
     id="batch-modal"
-    class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-navy-950/75 backdrop-blur-sm animate-in fade-in duration-200"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5 bg-navy-950/75 backdrop-blur-sm animate-in fade-in duration-200"
   >
-    <div class="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
 
       <!-- Header Modal -->
-      <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
+      <div class="px-6 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 shrink-0">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-primary-500/20">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-teal-500 text-white flex items-center justify-center text-base font-bold shadow-sm">
             ⚡
           </div>
           <div>
-            <h3 class="font-extrabold text-slate-900 dark:text-white text-base">
+            <h3 class="font-extrabold text-slate-900 dark:text-white text-base leading-snug">
               Upload Foto Massal (Per Kategori)
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">
+            <p class="text-[11px] text-slate-400">
               Pilih banyak foto sekaligus, tentukan kategori, dan nama akan otomatis dirapikan.
             </p>
           </div>
@@ -436,109 +515,148 @@ const categories = Object.keys(categoryCounts);
       </div>
 
       <!-- Body Modal (Scrollable) -->
-      <div class="p-6 overflow-y-auto space-y-6">
+      <div class="p-5 sm:p-6 overflow-y-auto space-y-5">
 
-        <!-- LANGKAH 1: PILIH KATEGORI -->
-        <div class="space-y-2.5">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            1. Tentukan Kategori Galeri <span class="text-rose-500">*</span>
-          </label>
+        <!-- LANGKAH 1: KATEGORI DOKUMENTASI (CARD RAPI) -->
+        <div class="p-4.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/70 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+              <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Tentukan Kategori Galeri
+              </span>
+            </div>
+            <span class="text-[11px] text-primary-600 dark:text-primary-400 font-semibold" id="batch-cat-indicator">
+              Kategori aktif: <strong>Candi</strong>
+            </span>
+          </div>
+
+          <!-- Chip Pills Kategori -->
           <div class="flex flex-wrap items-center gap-2" id="batch-cat-chips">
-            {['Candi', 'Petualangan', 'Pantai', 'Budaya', 'Armada', 'Wisata'].map((cat, idx) => (
+            {allCategories.map((cat, idx) => (
               <button
                 type="button"
                 data-cat-value={cat}
-                class={`chip-cat px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                class={`chip-cat inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition cursor-pointer border ${
                   idx === 0
-                    ? 'bg-primary-600 text-white border-primary-600 shadow-xs'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-primary-400'
+                    ? 'active bg-primary-600 text-white border-primary-600 shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-primary-400 hover:bg-slate-100'
                 }`}
               >
-                {cat === 'Candi' && '⛩️ '}
-                {cat === 'Petualangan' && '🚙 '}
-                {cat === 'Pantai' && '🏖️ '}
-                {cat === 'Budaya' && '🏛️ '}
-                {cat === 'Armada' && '🚐 '}
-                {cat === 'Wisata' && '🌄 '}
-                <span>{cat}</span>
+                <span class="shrink-0">{getCatEmoji(cat)}</span>
+                <span class="chip-label shrink-0">{cat}</span>
               </button>
             ))}
+
             <button
               type="button"
               id="btn-custom-cat"
-              class="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-primary-600 dark:text-primary-400 border border-dashed border-primary-300 dark:border-primary-700 hover:bg-primary-50 dark:hover:bg-primary-950/40 transition cursor-pointer"
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-primary-600 dark:text-primary-400 border border-dashed border-primary-300 dark:border-primary-700 hover:bg-primary-50 dark:hover:bg-primary-950/40 transition cursor-pointer shrink-0"
             >
-              + Kategori Lain
+              <span>+</span>
+              <span>Kategori Baru</span>
             </button>
           </div>
 
-          <!-- Input Kategori Kustom (Hidden by default) -->
-          <div id="custom-cat-box" class="hidden pt-1.5">
-            <input
-              type="text"
-              id="batch-custom-cat-input"
-              placeholder="Ketik nama kategori baru (contoh: Kuliner, Outbound, dll)..."
-              class="w-full px-3.5 py-2 rounded-xl border border-primary-300 dark:border-primary-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-primary-500 outline-none"
-            />
-          </div>
-        </div>
-
-        <!-- LANGKAH 2: PENAMAAN MASSAL (SMART AUTO-NAMING) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700">
-          <div class="space-y-1.5">
-            <label for="batch-base-title" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              2. Judul / Topik Utama <span class="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="batch-base-title"
-              value="Borobudur Sunrise Tour"
-              placeholder="Contoh: Merapi Lava Tour / Prambanan Sunset"
-              class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-primary-500 outline-none"
-            />
-            <p class="text-[11px] text-slate-400">
-              Judul ini akan menjadi dasar nama seluruh foto dalam batch ini.
+          <!-- Input Kategori Baru -->
+          <div id="custom-cat-box" class="hidden pt-1">
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                id="batch-custom-cat-input"
+                placeholder="Ketik nama kategori baru (contoh: Kuliner, Outbound)..."
+                class="flex-1 px-3.5 py-2 rounded-xl border border-primary-300 dark:border-primary-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-primary-500 outline-none"
+              />
+              <button
+                type="button"
+                id="btn-add-batch-cat"
+                class="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold transition cursor-pointer shrink-0"
+              >
+                + Tambahkan
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">
+              Kategori baru akan otomatis dijadikan pilihan aktif dan tersimpan.
             </p>
           </div>
+        </div>
 
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Pola Penamaan Otomatis
-            </label>
-            <select
-              id="batch-naming-pattern"
-              class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-primary-500 outline-none cursor-pointer"
-            >
-              <option value="numbered" selected>Nomor Urut: [Judul] #1, #2, #3...</option>
-              <option value="filename">Gunakan Nama File Foto Asli</option>
-              <option value="same">Judul Sama Persis untuk Semua</option>
-            </select>
-            <div class="pt-1">
-              <label class="inline-flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="batch-is-featured"
-                  checked
-                  class="w-4 h-4 rounded text-primary-600 focus:ring-primary-500"
-                />
-                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Tampilkan di Slider Home (Halaman Utama)
-                </span>
+        <!-- LANGKAH 2: INFORMASI JUDUL & PENAMAAN OTOMATIS -->
+        <div class="p-4.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/70 space-y-3.5">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+            <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              Format Penamaan Foto
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="space-y-1">
+              <label for="batch-base-title" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                Judul / Topik Utama <span class="text-rose-500">*</span>
               </label>
+              <input
+                type="text"
+                id="batch-base-title"
+                value="Borobudur Sunrise Tour"
+                placeholder="Contoh: Borobudur Sunrise Tour"
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-primary-500 outline-none"
+              />
+              <p class="text-[10px] text-slate-400">
+                Dasar penamaan seluruh foto di batch ini.
+              </p>
             </div>
+
+            <div class="space-y-1">
+              <label for="batch-naming-pattern" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                Pola Penamaan Otomatis
+              </label>
+              <select
+                id="batch-naming-pattern"
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-primary-500 outline-none cursor-pointer"
+              >
+                <option value="numbered" selected>Nomor Urut: [Judul] #1, #2, #3...</option>
+                <option value="filename">Gunakan Nama File Foto Asli</option>
+                <option value="same">Judul Sama Persis untuk Semua</option>
+              </select>
+              <p class="text-[10px] text-slate-400">
+                Otomatis memberi nomor urut per foto.
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+            <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                id="batch-is-featured"
+                checked
+                class="w-4 h-4 rounded text-primary-600 focus:ring-primary-500 cursor-pointer"
+              />
+              <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Tampilkan juga di Slider Halaman Utama (Home Carousel)
+              </span>
+            </label>
           </div>
         </div>
 
-        <!-- LANGKAH 3: DROPZONE PILIH BANYAK FILE -->
-        <div class="space-y-2">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            3. Pilih / Tarik Banyak File Foto Sekaligus
-          </label>
+        <!-- LANGKAH 3: DROPZONE UNGGAH BANYAK FILE -->
+        <div class="p-4.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/70 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+              <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Pilih Banyak File Foto Sekaligus
+              </span>
+            </div>
+            <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+              JPG, PNG, WebP
+            </span>
+          </div>
 
-          <!-- Dropzone -->
           <div
             id="batch-dropzone"
-            class="relative rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-primary-500 dark:hover:border-primary-400 p-8 text-center transition-all bg-white dark:bg-slate-800/40 cursor-pointer group"
+            class="relative rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-primary-500 dark:hover:border-primary-400 p-6 text-center transition-all bg-white dark:bg-slate-800/80 cursor-pointer group"
           >
             <input
               type="file"
@@ -547,23 +665,23 @@ const categories = Object.keys(categoryCounts);
               accept="image/jpeg,image/png,image/webp"
               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-            <div class="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center text-2xl mx-auto mb-3 group-hover:scale-110 transition-transform">
+            <div class="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xl mx-auto mb-2 group-hover:scale-110 transition-transform">
               📁
             </div>
-            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">
-              Klik untuk pilih banyak foto atau tarik file ke sini
+            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">
+              Klik untuk pilih banyak foto atau tarik file foto ke sini
             </p>
-            <p class="text-xs text-slate-400 mt-1">
-              Mendukung JPG, PNG, atau WebP. Bisa memilih 5, 10, hingga 20+ foto sekaligus.
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Bisa langsung pilih 5, 10, hingga 20+ foto sekaligus.
             </p>
-            <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-2">
-              ⚡ Otomatis dikompresi di browser agar upload super cepat & hemat memori!
+            <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
+              ⚡ Otomatis dikompresi agar proses upload super cepat & hemat kuota.
             </p>
           </div>
         </div>
 
-        <!-- LANGKAH 4: PRATINJAU GRID FOTO TERPILIH (PREVIEW BEFORE SAVE) -->
-        <div id="batch-preview-section" class="hidden space-y-3 pt-2">
+        <!-- LANGKAH 4: PRATINJAU GRID FOTO TERPILIH -->
+        <div id="batch-preview-section" class="hidden space-y-3 pt-1">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -580,16 +698,15 @@ const categories = Object.keys(categoryCounts);
             </button>
           </div>
 
-          <!-- Thumbnail Grid Preview -->
           <div
             id="batch-preview-grid"
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-72 overflow-y-auto p-1"
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-1"
           >
             <!-- Rendered by JS -->
           </div>
         </div>
 
-        <!-- PROGRESS OVERLAY WHEN PROCESSING -->
+        <!-- PROGRESS OVERLAY -->
         <div id="batch-progress-box" class="hidden p-4 rounded-2xl bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800 text-center space-y-2">
           <div class="flex items-center justify-center gap-2 text-primary-700 dark:text-primary-300 text-xs font-bold">
             <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -670,26 +787,49 @@ const categories = Object.keys(categoryCounts);
           />
         </div>
 
-        <div>
-          <label for="form-single-category" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-            Kategori
+        <div class="space-y-2">
+          <label for="form-single-category-select" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+            Kategori Foto *
           </label>
-          <input
-            type="text"
-            name="category"
-            id="form-single-category"
-            list="category-suggestions"
-            placeholder="Pilih atau ketik kategori..."
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-primary-500 outline-none"
-          />
-          <datalist id="category-suggestions">
-            <option value="Candi" />
-            <option value="Petualangan" />
-            <option value="Pantai" />
-            <option value="Budaya" />
-            <option value="Armada" />
-            <option value="Wisata" />
-          </datalist>
+          <div class="relative">
+            <select
+              id="form-single-category-select"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-primary-500 outline-none cursor-pointer appearance-none pr-9"
+            >
+              {allCategories.map((cat) => (
+                <option value={cat}>{getCatEmoji(cat)} {cat}</option>
+              ))}
+              <option value="__custom__">➕ + Tambah Kategori Baru...</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+
+          <input type="hidden" name="category" id="form-single-category" value="Candi" />
+
+          <div id="single-custom-cat-box" class="hidden pt-1">
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                id="single-custom-cat-input"
+                placeholder="Ketik kategori baru (contoh: Kuliner, Outbound)..."
+                class="flex-1 px-3.5 py-2 rounded-xl border border-primary-300 dark:border-primary-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-primary-500 outline-none"
+              />
+              <button
+                type="button"
+                id="btn-apply-single-cat"
+                class="px-3.5 py-2 rounded-xl bg-primary-600 text-white text-xs font-bold hover:bg-primary-700 transition cursor-pointer shrink-0"
+              >
+                Gunakan
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">
+              Kategori baru akan otomatis terdaftar di pilihan dan langsung dipakai.
+            </p>
+          </div>
         </div>
 
         <div>
@@ -747,10 +887,141 @@ const categories = Object.keys(categoryCounts);
     </div>
   </div>
 
+  <!-- ========================================================================= -->
+  <!-- MODAL 3: KELOLA KATEGORI (UBAH NAMA & HAPUS KATEGORI) -->
+  <!-- ========================================================================= -->
+  <div id="manage-cats-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-navy-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+    <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <!-- Header -->
+      <div class="px-6 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base font-bold border border-amber-500/20">
+            🏷️
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Kelola Kategori Galeri</h3>
+            <p class="text-[11px] text-slate-400">Ubah nama kategori atau hapus kategori yang tidak dipakai.</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-manage-cats" class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-base">
+          ✕
+        </button>
+      </div>
+
+      <!-- Body: List of categories with actions -->
+      <div class="p-6 overflow-y-auto space-y-3">
+        {allCategories.map((cat) => {
+          const count = categoryCounts[cat] || 0;
+          return (
+            <div class="cat-row p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/70 space-y-2.5 transition">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="text-xl shrink-0">{getCatEmoji(cat)}</span>
+                  <div class="min-w-0">
+                    <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate cat-name-display">{cat}</h4>
+                    <p class="text-[11px] text-slate-400 font-medium">
+                      {count > 0 ? `${count} foto menggunakan kategori ini` : 'Belum ada foto'}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <!-- Tombol Rename -->
+                  <button
+                    type="button"
+                    data-cat-name={cat}
+                    class="btn-trigger-rename px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-primary-500 hover:text-primary-600 transition cursor-pointer flex items-center gap-1"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    <span>Ubah</span>
+                  </button>
+
+                  <!-- Tombol Hapus -->
+                  <button
+                    type="button"
+                    data-cat-name={cat}
+                    data-cat-count={count}
+                    class="btn-trigger-delete p-1.5 rounded-xl text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent transition cursor-pointer"
+                    title="Hapus kategori ini"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Form Inline Rename (Hidden by default) -->
+              <div class="cat-rename-form hidden pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                <form method="POST" class="flex items-center gap-2">
+                  <input type="hidden" name="_action" value="rename_category" />
+                  <input type="hidden" name="old_category" value={cat} />
+                  <input
+                    type="text"
+                    name="new_category"
+                    value={cat}
+                    required
+                    placeholder="Nama kategori baru..."
+                    class="flex-1 px-3 py-1.5 rounded-xl border border-primary-300 dark:border-primary-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                  <button
+                    type="submit"
+                    class="px-3 py-1.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold transition cursor-pointer"
+                  >
+                    Simpan
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-cancel-rename px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                </form>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex justify-end shrink-0">
+        <button
+          type="button"
+          id="btn-done-manage-cats"
+          class="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold transition cursor-pointer"
+        >
+          Selesai
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Hidden untuk Hapus Kategori -->
+  <form id="cat-delete-form" method="POST" class="hidden">
+    <input type="hidden" name="_action" value="delete_category" />
+    <input type="hidden" name="target_category" id="cat-delete-target-input" value="" />
+    <input type="hidden" name="delete_mode" id="cat-delete-mode-input" value="reassign" />
+  </form>
+
 </AdminLayout>
 
 <script is:inline>
   (() => {
+    // Emoji Helper untuk kategori
+    function getEmoji(cat) {
+      const c = (cat || '').toLowerCase();
+      if (c.includes('candi') || c.includes('temple')) return '⛩️';
+      if (c.includes('petualang') || c.includes('adventure') || c.includes('jeep')) return '🚙';
+      if (c.includes('pantai') || c.includes('beach') || c.includes('laut')) return '🏖️';
+      if (c.includes('budaya') || c.includes('culture') || c.includes('kraton') || c.includes('malioboro')) return '🏛️';
+      if (c.includes('armada') || c.includes('mobil') || c.includes('car') || c.includes('driver')) return '🚐';
+      if (c.includes('alam') || c.includes('nature') || c.includes('gunung')) return '🌄';
+      if (c.includes('kuliner') || c.includes('food')) return '🍲';
+      return '📸';
+    }
+
     // Canvas Client-side Compressor Helper
     function compressImage(file, maxDim = 1280, quality = 0.82) {
       return new Promise((resolve, reject) => {
@@ -787,6 +1058,64 @@ const categories = Object.keys(categoryCounts);
         reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
         reader.readAsDataURL(file);
       });
+    }
+
+    // ==========================================
+    // SINKRONISASI KATEGORI SECARA OTOMATIS
+    // ==========================================
+    const batchCatChips = document.getElementById('batch-cat-chips');
+    const btnCustomCat = document.getElementById('btn-custom-cat');
+    const batchCatIndicator = document.getElementById('batch-cat-indicator');
+    const singleCategorySelect = document.getElementById('form-single-category-select');
+    const singleCategoryInput = document.getElementById('form-single-category');
+
+    let currentKnownCategories = new Set();
+    document.querySelectorAll('.chip-cat').forEach((c) => {
+      const v = c.getAttribute('data-cat-value');
+      if (v) currentKnownCategories.add(v);
+    });
+
+    // Fungsi untuk mendaftarkan kategori baru secara realtime di SEMUA form/dropdown
+    function registerNewCategory(catName) {
+      const name = (catName || '').trim();
+      if (!name || name === '__custom__') return;
+
+      // 1. Tambah ke Chip Batch jika belum ada
+      if (!currentKnownCategories.has(name) && batchCatChips && btnCustomCat) {
+        currentKnownCategories.add(name);
+
+        const newBtn = document.createElement('button');
+        newBtn.type = 'button';
+        newBtn.setAttribute('data-cat-value', name);
+        newBtn.className =
+          'chip-cat inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition cursor-pointer border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-primary-400 hover:bg-slate-100';
+        newBtn.innerHTML = `<span class="shrink-0">${getEmoji(name)}</span><span class="chip-label shrink-0">${name}</span>`;
+
+        newBtn.addEventListener('click', () => selectBatchCategory(name));
+        batchCatChips.insertBefore(newBtn, btnCustomCat);
+      }
+
+      // 2. Tambah ke Dropdown Single Select jika belum ada
+      if (singleCategorySelect) {
+        let exists = false;
+        for (let i = 0; i < singleCategorySelect.options.length; i++) {
+          if (singleCategorySelect.options[i].value.toLowerCase() === name.toLowerCase()) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = `${getEmoji(name)} ${name}`;
+          const customOpt = singleCategorySelect.querySelector('option[value="__custom__"]');
+          if (customOpt) {
+            singleCategorySelect.insertBefore(opt, customOpt);
+          } else {
+            singleCategorySelect.appendChild(opt);
+          }
+        }
+      }
     }
 
     // ==========================================
@@ -843,12 +1172,12 @@ const categories = Object.keys(categoryCounts);
     const hiddenForm = document.getElementById('batch-hidden-form');
     const hiddenDataInput = document.getElementById('batch-data-input');
 
-    const customCatBtn = document.getElementById('btn-custom-cat');
     const customCatBox = document.getElementById('custom-cat-box');
     const customCatInput = document.getElementById('batch-custom-cat-input');
+    const btnAddBatchCat = document.getElementById('btn-add-batch-cat');
 
     let selectedCategory = 'Candi';
-    let batchQueue = []; // Array of { id, originalName, dataUrl, title, size }
+    let batchQueue = [];
 
     const openBatchModal = () => {
       batchModal?.classList.remove('hidden');
@@ -871,43 +1200,67 @@ const categories = Object.keys(categoryCounts);
       if (e.target === batchModal) closeBatchModal();
     });
 
-    // Category chips selection
-    const catChips = document.querySelectorAll('.chip-cat');
-    catChips.forEach((chip) => {
-      chip.addEventListener('click', () => {
-        catChips.forEach((c) => {
-          c.classList.remove('bg-primary-600', 'text-white', 'border-primary-600', 'shadow-xs');
-          c.classList.add('bg-slate-50', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
-        });
-        chip.classList.add('bg-primary-600', 'text-white', 'border-primary-600', 'shadow-xs');
-        chip.classList.remove('bg-slate-50', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+    // Fungsi Pilih Chip Kategori Batch
+    function selectBatchCategory(catName) {
+      selectedCategory = catName;
 
-        selectedCategory = chip.getAttribute('data-cat-value') || 'Wisata';
-        customCatBox?.classList.add('hidden');
+      if (batchCatIndicator) {
+        batchCatIndicator.innerHTML = `Kategori aktif: <strong>${catName}</strong>`;
+      }
 
-        // Beri saran judul default sesuai kategori
-        if (baseTitleInput && (!baseTitleInput.value || baseTitleInput.value.includes('Tour'))) {
-          if (selectedCategory === 'Candi') baseTitleInput.value = 'Borobudur Sunrise Tour';
-          else if (selectedCategory === 'Petualangan') baseTitleInput.value = 'Merapi Lava Tour';
-          else if (selectedCategory === 'Pantai') baseTitleInput.value = 'Eksotisme Pantai Selatan Jogja';
-          else if (selectedCategory === 'Budaya') baseTitleInput.value = 'Jalan Santai Malioboro & Kraton';
-          else if (selectedCategory === 'Armada') baseTitleInput.value = 'Armada Nyaman & Driver Ramah';
-          applyNamingTitles();
+      document.querySelectorAll('.chip-cat').forEach((c) => {
+        const val = c.getAttribute('data-cat-value');
+        if (val === catName) {
+          c.classList.add('active', 'bg-primary-600', 'text-white', 'border-primary-600', 'shadow-xs');
+          c.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+        } else {
+          c.classList.remove('active', 'bg-primary-600', 'text-white', 'border-primary-600', 'shadow-xs');
+          c.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
         }
+      });
+
+      customCatBox?.classList.add('hidden');
+
+      if (baseTitleInput && (!baseTitleInput.value || baseTitleInput.value.includes('Tour'))) {
+        if (selectedCategory.includes('Candi')) baseTitleInput.value = 'Borobudur Sunrise Tour';
+        else if (selectedCategory.includes('Petualang')) baseTitleInput.value = 'Merapi Lava Tour';
+        else if (selectedCategory.includes('Pantai')) baseTitleInput.value = 'Eksotisme Pantai Selatan Jogja';
+        else if (selectedCategory.includes('Budaya')) baseTitleInput.value = 'Jalan Santai Malioboro & Kraton';
+        else if (selectedCategory.includes('Armada')) baseTitleInput.value = 'Armada Nyaman & Driver Ramah';
+        else baseTitleInput.value = `${selectedCategory} Jogja Trip`;
+        applyNamingTitles();
+      }
+    }
+
+    document.querySelectorAll('.chip-cat').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const val = chip.getAttribute('data-cat-value') || 'Wisata';
+        selectBatchCategory(val);
       });
     });
 
-    customCatBtn?.addEventListener('click', () => {
+    btnCustomCat?.addEventListener('click', () => {
       customCatBox?.classList.toggle('hidden');
       customCatInput?.focus();
     });
 
-    customCatInput?.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      if (val) selectedCategory = val;
+    function handleAddNewBatchCategory() {
+      const val = customCatInput?.value?.trim();
+      if (!val) return;
+      registerNewCategory(val);
+      selectBatchCategory(val);
+      customCatBox?.classList.add('hidden');
+      if (customCatInput) customCatInput.value = '';
+    }
+
+    btnAddBatchCat?.addEventListener('click', handleAddNewBatchCategory);
+    customCatInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddNewBatchCategory();
+      }
     });
 
-    // Auto naming application
     function applyNamingTitles() {
       const baseTitle = baseTitleInput?.value.trim() || 'Foto Wisata';
       const pattern = namingPatternSelect?.value || 'numbered';
@@ -931,7 +1284,6 @@ const categories = Object.keys(categoryCounts);
     baseTitleInput?.addEventListener('input', applyNamingTitles);
     namingPatternSelect?.addEventListener('change', applyNamingTitles);
 
-    // Render preview cards in modal
     function renderPreviewGrid() {
       if (!previewGrid || !previewSection) return;
 
@@ -985,7 +1337,6 @@ const categories = Object.keys(categoryCounts);
         previewGrid.appendChild(card);
       });
 
-      // Hook Remove buttons
       previewGrid.querySelectorAll('.btn-remove-item').forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -995,7 +1346,6 @@ const categories = Object.keys(categoryCounts);
         });
       });
 
-      // Hook Title input edits
       previewGrid.querySelectorAll('.input-card-title').forEach((inp) => {
         inp.addEventListener('input', (e) => {
           const idx = Number(inp.getAttribute('data-idx'));
@@ -1011,7 +1361,6 @@ const categories = Object.keys(categoryCounts);
       renderPreviewGrid();
     });
 
-    // Handle File Selection & Compression
     async function handleFilesSelected(files) {
       const validFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
       if (validFiles.length === 0) return;
@@ -1047,10 +1396,9 @@ const categories = Object.keys(categoryCounts);
 
     fileInput?.addEventListener('change', (e) => {
       handleFilesSelected(e.target.files);
-      fileInput.value = ''; // Reset input agar bisa pilih file lagi
+      fileInput.value = '';
     });
 
-    // Drag and Drop handling on dropzone
     dropzone?.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropzone.classList.add('border-primary-500', 'bg-primary-50/20');
@@ -1069,12 +1417,11 @@ const categories = Object.keys(categoryCounts);
       }
     });
 
-    // Batch Submit
     btnSubmitBatch?.addEventListener('click', () => {
       if (batchQueue.length === 0) return;
 
       const isFeatured = isFeaturedCheckbox?.checked !== false;
-      const finalCategory = customCatInput?.value.trim() || selectedCategory || 'Wisata';
+      const finalCategory = selectedCategory || 'Wisata';
 
       const payload = batchQueue.map((item) => ({
         title: item.title,
@@ -1107,27 +1454,38 @@ const categories = Object.keys(categoryCounts);
     const singleTitle = document.getElementById('single-modal-title');
     const singlePhotoId = document.getElementById('form-single-photo-id');
     const singleTitleInput = document.getElementById('form-single-title');
-    const singleCategoryInput = document.getElementById('form-single-category');
     const singleImageUrlInput = document.getElementById('form-single-image-url');
     const singleIsFeatured = document.getElementById('form-single-is-featured');
 
+    const singleCustomCatBox = document.getElementById('single-custom-cat-box');
+    const singleCustomCatInput = document.getElementById('single-custom-cat-input');
+    const btnApplySingleCat = document.getElementById('btn-apply-single-cat');
+
     const openSingleModal = (isEdit = false, item = null) => {
       if (!singleModal) return;
+
+      const itemCategory = (item?.category || selectedCategory || 'Candi').trim();
+
+      registerNewCategory(itemCategory);
+
+      if (singleCategorySelect) singleCategorySelect.value = itemCategory;
+      if (singleCategoryInput) singleCategoryInput.value = itemCategory;
+      singleCustomCatBox?.classList.add('hidden');
+
       if (isEdit && item) {
         if (singleTitle) singleTitle.textContent = 'Edit Foto Galeri';
         if (singlePhotoId) singlePhotoId.value = item.id || '';
         if (singleTitleInput) singleTitleInput.value = item.title || '';
-        if (singleCategoryInput) singleCategoryInput.value = item.category || 'Wisata';
         if (singleImageUrlInput) singleImageUrlInput.value = item.image_url || '';
         if (singleIsFeatured) singleIsFeatured.checked = item.is_featured !== false;
       } else {
         if (singleTitle) singleTitle.textContent = 'Tambah 1 Foto Galeri';
         if (singlePhotoId) singlePhotoId.value = '';
         if (singleTitleInput) singleTitleInput.value = '';
-        if (singleCategoryInput) singleCategoryInput.value = selectedCategory || 'Wisata';
         if (singleImageUrlInput) singleImageUrlInput.value = '';
         if (singleIsFeatured) singleIsFeatured.checked = true;
       }
+
       singleModal.classList.remove('hidden');
       singleModal.classList.add('flex');
     };
@@ -1145,7 +1503,35 @@ const categories = Object.keys(categoryCounts);
       if (e.target === singleModal) closeSingleModal();
     });
 
-    // Hook edit buttons on cards
+    singleCategorySelect?.addEventListener('change', () => {
+      const val = singleCategorySelect.value;
+      if (val === '__custom__') {
+        singleCustomCatBox?.classList.remove('hidden');
+        singleCustomCatInput?.focus();
+      } else {
+        singleCustomCatBox?.classList.add('hidden');
+        if (singleCategoryInput) singleCategoryInput.value = val;
+      }
+    });
+
+    function handleApplySingleCustomCategory() {
+      const val = singleCustomCatInput?.value?.trim();
+      if (!val) return;
+      registerNewCategory(val);
+      if (singleCategorySelect) singleCategorySelect.value = val;
+      if (singleCategoryInput) singleCategoryInput.value = val;
+      singleCustomCatBox?.classList.add('hidden');
+      if (singleCustomCatInput) singleCustomCatInput.value = '';
+    }
+
+    btnApplySingleCat?.addEventListener('click', handleApplySingleCustomCategory);
+    singleCustomCatInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleApplySingleCustomCategory();
+      }
+    });
+
     document.querySelectorAll('.btn-edit').forEach((btn) => {
       btn.addEventListener('click', () => {
         try {
@@ -1160,11 +1546,88 @@ const categories = Object.keys(categoryCounts);
       });
     });
 
-    // Escape key closes both modals
+    // ==========================================
+    // 4. MODAL KELOLA KATEGORI (RENAME & DELETE)
+    // ==========================================
+    const manageCatsModal = document.getElementById('manage-cats-modal');
+    const btnManageCats = document.getElementById('btn-manage-categories');
+    const btnCloseManageCats = document.getElementById('btn-close-manage-cats');
+    const btnDoneManageCats = document.getElementById('btn-done-manage-cats');
+
+    const catDeleteForm = document.getElementById('cat-delete-form');
+    const catDeleteTargetInput = document.getElementById('cat-delete-target-input');
+    const catDeleteModeInput = document.getElementById('cat-delete-mode-input');
+
+    const openManageCats = () => {
+      manageCatsModal?.classList.remove('hidden');
+      manageCatsModal?.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeManageCats = () => {
+      manageCatsModal?.classList.add('hidden');
+      manageCatsModal?.classList.remove('flex');
+      document.body.style.overflow = '';
+    };
+
+    btnManageCats?.addEventListener('click', openManageCats);
+    btnCloseManageCats?.addEventListener('click', closeManageCats);
+    btnDoneManageCats?.addEventListener('click', closeManageCats);
+
+    manageCatsModal?.addEventListener('click', (e) => {
+      if (e.target === manageCatsModal) closeManageCats();
+    });
+
+    // Toggle Form Rename Inline
+    document.querySelectorAll('.btn-trigger-rename').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('.cat-row');
+        const renameForm = row?.querySelector('.cat-rename-form');
+        const input = renameForm?.querySelector('input[name="new_category"]');
+        renameForm?.classList.toggle('hidden');
+        if (!renameForm?.classList.contains('hidden')) {
+          input?.focus();
+          input?.select();
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-cancel-rename').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const form = btn.closest('.cat-rename-form');
+        form?.classList.add('hidden');
+      });
+    });
+
+    // Trigger Hapus Kategori
+    document.querySelectorAll('.btn-trigger-delete').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const catName = btn.getAttribute('data-cat-name') || '';
+        const count = Number(btn.getAttribute('data-cat-count') || '0');
+
+        if (!catName) return;
+
+        let confirmMsg = `Hapus kategori "${catName}"?`;
+        if (count > 0) {
+          confirmMsg = `Kategori "${catName}" saat ini digunakan oleh ${count} foto.\n\nFoto-foto tersebut akan otomatis dialihkan ke kategori "Wisata" agar tidak terhapus.\n\nLanjutkan menghapus kategori ini?`;
+        }
+
+        if (confirm(confirmMsg)) {
+          if (catDeleteTargetInput && catDeleteModeInput && catDeleteForm) {
+            catDeleteTargetInput.value = catName;
+            catDeleteModeInput.value = 'reassign'; // foto dialihkan ke 'Wisata' agar aman
+            catDeleteForm.submit();
+          }
+        }
+      });
+    });
+
+    // Escape key closes all modals
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeBatchModal();
         closeSingleModal();
+        closeManageCats();
       }
     });
   })();
