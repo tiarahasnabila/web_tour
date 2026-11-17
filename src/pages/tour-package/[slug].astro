@@ -35,17 +35,28 @@ if (tour) {
   subImage1 = images[1] || images[0];
   subImage2 = images[2] || images[0];
 
+  const siteUrl = (settings.canonical_site_url || 'https://beyondjogjatours.com').replace(/\/+$/, '');
+  const cleanPrice = (tour.data.price || '450000').replace(/\D/g, '');
+
   tourSchema = {
     "@context": "https://schema.org",
     "@type": "TouristTrip",
     "name": tour.data.title,
-    "description": tour.data.tagline || `Paket wisata private ${tour.data.title} di Yogyakarta.`,
-    "touristType": "Private Tour",
+    "description": tour.data.tagline || `Paket wisata private ${tour.data.title} di Yogyakarta. Termasuk armada ber-AC, driver ramah, dan bahan bakar.`,
+    "touristType": ["International Tourists", "Domestic Tourists", "Families", "Couples"],
+    "provider": {
+      "@type": "TravelAgency",
+      "name": settings.site_title || "Beyond Jogja Tours",
+      "url": siteUrl,
+      "telephone": settings.phone_number,
+      "email": settings.email_address
+    },
     "offers": {
       "@type": "Offer",
-      "price": (tour.data.price || '450000').replace(/\D/g, ''),
+      "price": cleanPrice,
       "priceCurrency": "IDR",
-      "availability": isUnderMaintenance ? "https://schema.org/Discontinued" : "https://schema.org/InStock"
+      "availability": isUnderMaintenance ? "https://schema.org/Discontinued" : "https://schema.org/InStock",
+      "url": `${siteUrl}/tour-package/${tour.slug}`
     },
     "aggregateRating": {
       "@type": "AggregateRating",
