@@ -10,46 +10,16 @@ export interface GalleryItem {
 }
 
 let cachedGallery: { data: GalleryItem[]; expires: number } | null = null;
-const GALLERY_CACHE_TTL = 30 * 1000; // 30 detik
-let isTableInitialized = false;
+const GALLERY_CACHE_TTL = 5 * 60 * 1000; // 5 menit cache
 
 export function invalidateGalleryCache() {
   cachedGallery = null;
-}
-
-// Inisialisasi tabel gallery di database (hanya dipanggil sekali saat server boot)
-async function ensureGalleryTable() {
-  if (isTableInitialized) return;
-  try {
-    await sql`
-      CREATE TABLE IF NOT EXISTS gallery (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        image_url TEXT NOT NULL,
-        category TEXT DEFAULT 'Wisata',
-        is_featured BOOLEAN DEFAULT true,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      );
-    `;
-
-    // Bersihkan duplikat jika sempat ada data ganda
-    await sql`
-      DELETE FROM gallery a USING gallery b
-      WHERE a.id > b.id AND a.title = b.title AND a.image_url = b.image_url;
-    `;
-
-    isTableInitialized = true;
-  } catch (err) {
-    console.error('Error ensuring gallery table:', err);
-  }
 }
 
 export async function getAllGallery(): Promise<GalleryItem[]> {
   if (cachedGallery && cachedGallery.expires > Date.now()) {
     return cachedGallery.data;
   }
-
-  await ensureGalleryTable();
 
   try {
     const rows = await sql`

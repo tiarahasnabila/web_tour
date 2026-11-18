@@ -91,10 +91,12 @@ function parseJsonArray<T>(val: any, fallback: T[]): T[] {
 }
 
 let cachedTours: { data: TourItem[]; expires: number } | null = null;
-const TOURS_CACHE_TTL = 30 * 1000; // 30 detik
+const tourSlugCache = new Map<string, { data: TourItem | null; expires: number }>();
+const TOURS_CACHE_TTL = 5 * 60 * 1000; // 5 menit cache
 
 export function invalidateToursCache() {
   cachedTours = null;
+  tourSlugCache.clear();
 }
 
 export async function getAllTours(): Promise<TourItem[]> {
@@ -178,6 +180,11 @@ export async function getAllTours(): Promise<TourItem[]> {
 }
 
 export async function getTourBySlug(slug: string): Promise<TourItem | null> {
+  const cached = tourSlugCache.get(slug);
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
+  }
+
   try {
     const rows = await sql`
       SELECT 
@@ -207,7 +214,7 @@ export async function getTourBySlug(slug: string): Promise<TourItem | null> {
     const r = rows[0];
     const gallery = parseJsonArray<string>(r.gallery, [r.thumbnail]);
 
-    return {
+    const result: TourItem = {
       id: r.id,
       slug: r.slug,
       data: {
@@ -241,6 +248,8 @@ export async function getTourBySlug(slug: string): Promise<TourItem | null> {
       htmlContent: marked.parse(r.content || '') as string,
       created_at: r.created_at,
     };
+    tourSlugCache.set(slug, { data: result, expires: Date.now() + TOURS_CACHE_TTL });
+    return result;
   } catch (err) {
     console.error('Error fetching tour by slug:', err);
     return null;

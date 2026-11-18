@@ -21,10 +21,12 @@ export interface CarItem {
 }
 
 let cachedCars: { data: CarItem[]; expires: number } | null = null;
-const CARS_CACHE_TTL = 30 * 1000; // 30 seconds
+const carSlugCache = new Map<string, { data: CarItem | null; expires: number }>();
+const CARS_CACHE_TTL = 5 * 60 * 1000; // 5 menit cache
 
 export function invalidateCarsCache() {
   cachedCars = null;
+  carSlugCache.clear();
 }
 
 export async function getAllCars(): Promise<CarItem[]> {
@@ -43,7 +45,7 @@ export async function getAllCars(): Promise<CarItem[]> {
       FROM cars 
       ORDER BY id ASC;
     `;
-    return rows.map((r: any) => {
+    const result: CarItem[] = rows.map((r: any) => {
       let features: string[] = [];
       try {
         features = typeof r.features === 'string' ? JSON.parse(r.features) : (r.features || []);
@@ -73,11 +75,17 @@ export async function getAllCars(): Promise<CarItem[]> {
     return result;
   } catch (err) {
     console.error('Error fetching cars from Neon:', err);
-    return [];
+    return cachedCars ? cachedCars.data : [];
   }
 }
 
 export async function getCarBySlug(slug: string): Promise<CarItem | null> {
+  const normSlug = slug.toLowerCase();
+  const cached = carSlugCache.get(normSlug);
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
+  }
+
   try {
     const rows = await sql`
       SELECT id, title, slug, thumbnail, features, whatsapp_message, content, created_at,
@@ -87,7 +95,7 @@ export async function getCarBySlug(slug: string): Promise<CarItem | null> {
              COALESCE(transmission, 'Manual / Matic') as transmission,
              COALESCE(badge, 'Tersedia') as badge
       FROM cars 
-      WHERE slug = ${slug.toLowerCase()} 
+      WHERE slug = ${normSlug} 
       LIMIT 1;
     `;
     if (rows.length === 0) return null;
@@ -98,7 +106,7 @@ export async function getCarBySlug(slug: string): Promise<CarItem | null> {
     } catch {
       features = [];
     }
-    return {
+    const result: CarItem = {
       id: r.id,
       slug: r.slug,
       data: {
@@ -116,6 +124,8 @@ export async function getCarBySlug(slug: string): Promise<CarItem | null> {
       htmlContent: marked.parse(r.content || '') as string,
       created_at: r.created_at,
     };
+    carSlugCache.set(normSlug, { data: result, expires: Date.now() + CARS_CACHE_TTL });
+    return result;
   } catch (err) {
     console.error('Error fetching car by slug:', err);
     return null;

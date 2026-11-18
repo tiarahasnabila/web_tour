@@ -3,6 +3,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
 import { getAllGallery, invalidateGalleryCache, type GalleryItem } from '../../../lib/gallery';
+import { uploadToR2, ensureR2Url, isR2Configured } from '../../../lib/r2';
 
 // Wajib login
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
@@ -69,9 +70,13 @@ if (Astro.request.method === 'POST') {
 
         for (const it of batchItems) {
           const title = (it.title || 'Foto Wisata').trim();
-          const imageUrl = (it.image_url || '').trim();
+          let imageUrl = (it.image_url || '').trim();
           const cat = (it.category || categoryName || 'Wisata').trim();
           const isFeatured = Boolean(it.is_featured);
+
+          if (imageUrl && imageUrl.startsWith('data:image/')) {
+            imageUrl = await ensureR2Url(imageUrl, `${title || 'gallery'}.jpg`, 'gallery');
+          }
 
           if (title && imageUrl) {
             await sql`
@@ -95,9 +100,14 @@ if (Astro.request.method === 'POST') {
 
       const imageFile = formData.get('image_file') as File | null;
       if (imageFile && imageFile.size > 0 && imageFile.name) {
-        const buffer = await imageFile.arrayBuffer();
-        const base64 = Buffer.from(buffer).toString('base64');
-        imageUrl = `data:${imageFile.type || 'image/jpeg'};base64,${base64}`;
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        if (isR2Configured()) {
+          imageUrl = await uploadToR2(buffer, imageFile.name, imageFile.type || 'image/jpeg', 'gallery');
+        } else {
+          imageUrl = `data:${imageFile.type || 'image/jpeg'};base64,${buffer.toString('base64')}`;
+        }
+      } else if (imageUrl && imageUrl.startsWith('data:image/')) {
+        imageUrl = await ensureR2Url(imageUrl, `${title || 'photo'}.jpg`, 'gallery');
       }
 
       if (!title || !imageUrl) {

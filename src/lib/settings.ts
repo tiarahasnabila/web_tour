@@ -23,7 +23,7 @@ export interface SiteSettings {
 }
 
 let cachedSettings: { data: SiteSettings; expires: number } | null = null;
-const SETTINGS_CACHE_TTL = 10 * 1000; // 10 seconds cache to keep pages snappy without stale data
+const SETTINGS_CACHE_TTL = 10 * 60 * 1000; // 10 menit cache (di-invalisir otomatis saat diupdate dari admin)
 
 export function invalidateSettingsCache() {
   cachedSettings = null;

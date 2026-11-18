@@ -10,7 +10,7 @@ export default defineConfig({
   adapter: vercel(),
   prefetch: {
     prefetchAll: false,
-    defaultStrategy: 'hover'
+    defaultStrategy: 'tap'
   },
   integrations: [tailwind()]
 });

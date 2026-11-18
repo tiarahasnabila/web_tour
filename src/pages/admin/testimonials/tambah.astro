@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
+import { invalidateTestimonialsCache } from '../../../lib/testimonials';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -30,6 +31,7 @@ if (Astro.request.method === 'POST') {
         INSERT INTO testimonials (name, origin, rating, trip_package, comment, avatar)
         VALUES (${name}, ${origin}, ${Number(rating)}, ${trip_package}, ${comment}, ${avatar});
       `;
+      invalidateTestimonialsCache();
       return Astro.redirect('/admin/testimonials?saved=1');
     }
   } catch (err: any) {

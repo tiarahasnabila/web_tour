@@ -3,6 +3,7 @@ import AdminLayout from '../../../../layouts/AdminLayout.astro';
 import { sql } from '../../../../lib/db';
 import { verifySessionToken } from '../../../../lib/auth';
 import { invalidateCarsCache } from '../../../../lib/cars';
+import { ensureR2Url } from '../../../../lib/r2';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -44,9 +45,10 @@ if (Astro.request.method === 'POST') {
       if (slugCheck.length > 0) {
         errorMessage = `Slug "${slug}" sudah dipakai unit mobil lain.`;
       } else {
+        const finalThumbnail = await ensureR2Url(thumbnail, `${slug}-car.jpg`, 'cars');
         await sql`
           UPDATE cars
-          SET title = ${title}, slug = ${slug}, thumbnail = ${thumbnail},
+          SET title = ${title}, slug = ${slug}, thumbnail = ${finalThumbnail},
               features = ${JSON.stringify(featuresArray)}, whatsapp_message = ${whatsapp_message}, content = ${content},
               price = ${price}, price_unit = ${price_unit}, capacity = ${capacity}, transmission = ${transmission}, badge = ${badge}
           WHERE id = ${carId};

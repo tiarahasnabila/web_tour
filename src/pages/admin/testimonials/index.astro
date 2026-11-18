@@ -2,6 +2,7 @@
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
+import { invalidateTestimonialsCache } from '../../../lib/testimonials';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -19,6 +20,7 @@ if (Astro.request.method === 'POST') {
 
     if (action === 'delete' && testId) {
       await sql`DELETE FROM testimonials WHERE id = ${testId};`;
+      invalidateTestimonialsCache();
       flash = { type: 'success', text: 'Testimoni berhasil dihapus.' };
     }
   } catch (err: any) {

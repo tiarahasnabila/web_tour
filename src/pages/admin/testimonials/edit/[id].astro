@@ -2,6 +2,7 @@
 import AdminLayout from '../../../../layouts/AdminLayout.astro';
 import { sql } from '../../../../lib/db';
 import { verifySessionToken } from '../../../../lib/auth';
+import { invalidateTestimonialsCache } from '../../../../lib/testimonials';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -39,6 +40,7 @@ if (Astro.request.method === 'POST') {
             trip_package = ${trip_package}, comment = ${comment}, avatar = ${avatar}
         WHERE id = ${testId};
       `;
+      invalidateTestimonialsCache();
       return Astro.redirect('/admin/testimonials?saved=1');
     }
   } catch (err: any) {

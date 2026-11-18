@@ -3,6 +3,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { sql } from '../../../lib/db';
 import { verifySessionToken } from '../../../lib/auth';
 import { invalidateCarsCache } from '../../../lib/cars';
+import { ensureR2Url } from '../../../lib/r2';
 
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
 if (!user) {
@@ -42,9 +43,10 @@ if (Astro.request.method === 'POST') {
         errorMessage = `Slug "${slug}" sudah dipakai unit mobil lain.`;
       } else {
         const featuresArray = featuresInput.split(',').map(s => s.trim()).filter(Boolean);
+        const finalThumbnail = await ensureR2Url(thumbnail, `${slug}-car.jpg`, 'cars');
         await sql`
           INSERT INTO cars (title, slug, thumbnail, features, whatsapp_message, content, price, price_unit, capacity, transmission, badge)
-          VALUES (${title}, ${slug}, ${thumbnail}, ${JSON.stringify(featuresArray)}, ${whatsapp_message}, ${content}, ${price}, ${price_unit}, ${capacity}, ${transmission}, ${badge});
+          VALUES (${title}, ${slug}, ${finalThumbnail}, ${JSON.stringify(featuresArray)}, ${whatsapp_message}, ${content}, ${price}, ${price_unit}, ${capacity}, ${transmission}, ${badge});
         `;
         invalidateCarsCache();
         return Astro.redirect('/admin/cars?saved=1');

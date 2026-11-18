@@ -4,6 +4,7 @@ import TourForm from '../../../../components/admin/TourForm.astro';
 import { sql } from '../../../../lib/db';
 import { verifySessionToken } from '../../../../lib/auth';
 import { invalidateToursCache } from '../../../../lib/tours';
+import { ensureR2Url } from '../../../../lib/r2';
 
 // Wajib login
 const user = verifySessionToken(Astro.cookies.get('admin_session')?.value);
@@ -84,12 +85,17 @@ if (Astro.request.method === 'POST') {
       if (slugCheck.length > 0) {
         errorMessage = `Slug "${slug}" sudah dipakai paket lain.`;
       } else {
+        const finalThumbnail = await ensureR2Url(thumbnail, `${slug}-thumb.jpg`, 'tours');
+        const finalGallery = await Promise.all(
+          gallery.map((img, i) => ensureR2Url(img, `${slug}-gallery-${i + 1}.jpg`, 'tours'))
+        );
+
         await sql`
           UPDATE tours
           SET 
             title = ${title},
             slug = ${slug},
-            thumbnail = ${thumbnail},
+            thumbnail = ${finalThumbnail},
             tagline = ${tagline},
             whatsapp_message = ${whatsapp_message},
             content = ${content},
@@ -105,7 +111,7 @@ if (Astro.request.method === 'POST') {
             highlights = ${JSON.stringify(highlights)},
             included = ${JSON.stringify(included)},
             excluded = ${JSON.stringify(excluded)},
-            gallery = ${JSON.stringify(gallery)},
+            gallery = ${JSON.stringify(finalGallery)},
             itinerary = ${JSON.stringify(itinerary)},
             rating = ${rating},
             reviews_count = ${reviews_count},
