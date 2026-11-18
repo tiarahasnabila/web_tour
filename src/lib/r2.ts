@@ -4,7 +4,8 @@ const accountId = process.env.R2_ACCOUNT_ID || import.meta.env.R2_ACCOUNT_ID || 
 const accessKeyId = process.env.R2_ACCESS_KEY_ID || import.meta.env.R2_ACCESS_KEY_ID || '';
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || import.meta.env.R2_SECRET_ACCESS_KEY || '';
 const bucketName = process.env.R2_BUCKET_NAME || import.meta.env.R2_BUCKET_NAME || '';
-const publicUrl = (process.env.R2_PUBLIC_URL || import.meta.env.R2_PUBLIC_URL || '').replace(/\/+$/, '');
+const rawPublicUrl = process.env.R2_PUBLIC_URL || import.meta.env.R2_PUBLIC_URL || '/api/media';
+const publicUrl = rawPublicUrl.replace(/\/+$/, '');
 
 let s3Client: S3Client | null = null;
 
@@ -26,7 +27,7 @@ export function getR2Client(): S3Client | null {
 }
 
 export function isR2Configured(): boolean {
-  return Boolean(accountId && accessKeyId && secretAccessKey && bucketName && publicUrl);
+  return Boolean(accountId && accessKeyId && secretAccessKey && bucketName);
 }
 
 /**
