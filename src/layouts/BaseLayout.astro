@@ -36,10 +36,9 @@ if (image) {
   ogImage = image.startsWith('http') ? image : `${siteUrl}${image.startsWith('/') ? '' : '/'}${image}`;
 }
 
-// Cache di Vercel Edge CDN selama 15 menit (s-maxage=900) dengan stale-while-revalidate 1 hari.
-// Browser client tidak mengunci cache lokal (max-age=0), sehingga selalu sinkron dengan Edge CDN.
-// Ini menghemat kuota transfer database secara drastis saat ada lonjakan pengunjung / bot.
-Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=900, stale-while-revalidate=86400');
+// Cache di Vercel Edge CDN selama 1 menit (s-maxage=60) dengan stale-while-revalidate 2 menit.
+// Ini menjaga database tetap hemat saat lonjakan pengunjung, namun perubahan admin muncul cepat.
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
 ---
 
 <!doctype html>

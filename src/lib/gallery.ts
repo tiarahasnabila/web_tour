@@ -10,7 +10,7 @@ export interface GalleryItem {
 }
 
 let cachedGallery: { data: GalleryItem[]; expires: number } | null = null;
-const GALLERY_CACHE_TTL = 5 * 60 * 1000; // 5 menit cache
+const GALLERY_CACHE_TTL = 60 * 1000; // 1 menit cache
 
 export function invalidateGalleryCache() {
   cachedGallery = null;

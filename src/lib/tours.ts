@@ -92,7 +92,7 @@ function parseJsonArray<T>(val: any, fallback: T[]): T[] {
 
 let cachedTours: { data: TourItem[]; expires: number } | null = null;
 const tourSlugCache = new Map<string, { data: TourItem | null; expires: number }>();
-const TOURS_CACHE_TTL = 5 * 60 * 1000; // 5 menit cache
+const TOURS_CACHE_TTL = 60 * 1000; // 1 menit cache
 
 export function invalidateToursCache() {
   cachedTours = null;
